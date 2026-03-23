@@ -1,30 +1,268 @@
 /**
- * Any CSS included here will be global. The classic template
- * bundles Infima by default. Infima is a CSS framework designed to
- * work well for content-centric websites.
+ * Global overrides for the Docusaurus site.
+ * Keep custom styling focused on CSS variables and scoped selectors so that
+ * upstream theme updates remain compatible.
  */
 
-/* You can override the default Infima variables here. */
-:root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+@font-face {
+  font-family: 'Yerevanyan';
+  src: url('/fonts/yerevanyan/Yerevanyan-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-/* For readability concerns, you should choose a lighter palette in dark mode. */
+@font-face {
+  font-family: 'Yerevanyan';
+  src: url('/fonts/yerevanyan/Yerevanyan-Regular-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Yerevanyan';
+  src: url('/fonts/yerevanyan/Yerevanyan-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Yerevanyan';
+  src: url('/fonts/yerevanyan/Yerevanyan-Bold-Italic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root {
+  --ifm-font-family-base: 'Yerevanyan', 'Helvetica Neue', Arial, sans-serif;
+  --ifm-background-color: #f9f7ff;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-font-color-base: #221a3f;
+  --ifm-color-primary: #5d68ff;
+  --ifm-color-primary-dark: #4a54e6;
+  --ifm-color-primary-darker: #3d46d1;
+  --ifm-color-primary-darkest: #2c34a8;
+  --ifm-color-primary-light: #737cff;
+  --ifm-color-primary-lighter: #8f97ff;
+  --ifm-color-primary-lightest: #b8beff;
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.85);
+  --ifm-navbar-link-color: #221a3f;
+  --ifm-navbar-link-hover-color: #5d68ff;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(93, 104, 255, 0.1);
+
+  --bubu-surface-elevated: rgba(255, 255, 255, 0.88);
+  --bubu-surface-card: rgba(255, 255, 255, 0.92);
+  --bubu-surface-muted: rgba(243, 240, 255, 0.88);
+  --bubu-text-primary: #221a3f;
+  --bubu-text-secondary: #45386a;
+  --bubu-text-muted: rgba(34, 26, 63, 0.72);
+  --bubu-border-soft: rgba(93, 104, 255, 0.18);
+  --bubu-border-strong: rgba(93, 104, 255, 0.35);
+  --bubu-hero-title-gradient: linear-gradient(120deg, #2d1f5d 0%, #5d68ff 55%, #01bfa5 100%);
+  --bubu-hero-title-shadow: 0 18px 45px rgba(93, 104, 255, 0.22);
+  --bubu-hero-subtitle: rgba(34, 26, 63, 0.78);
+  --bubu-hero-background: linear-gradient(180deg, #f9f7ff 0%, #ffffff 55%, #f2f0ff 100%);
+  --bubu-button-secondary-text: #221a3f;
+  --bubu-button-secondary-bg: rgba(255, 255, 255, 0.75);
+  --bubu-button-secondary-border: rgba(93, 104, 255, 0.32);
+  --bubu-button-secondary-hover-bg: rgba(93, 104, 255, 0.18);
+  --bubu-card-bg: rgba(255, 255, 255, 0.9);
+  --bubu-card-shadow: 0 26px 65px rgba(44, 34, 77, 0.12);
+  --bubu-card-hover-shadow: 0 28px 70px rgba(44, 34, 77, 0.18);
+  --bubu-section-background: linear-gradient(180deg, rgba(93, 104, 255, 0.08) 0%, rgba(255, 255, 255, 1) 100%);
+  --bubu-section-backdrop-a: rgba(93, 104, 255, 0.18);
+  --bubu-section-backdrop-b: rgba(216, 87, 255, 0.15);
+  --bubu-section-backdrop-c: rgba(113, 254, 193, 0.18);
+  --bubu-flow-wrapper-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.95), rgba(243, 240, 255, 0.9));
+  --bubu-badge-background: rgba(93, 104, 255, 0.12);
+  --bubu-badge-border: rgba(93, 104, 255, 0.32);
+  --bubu-badge-text: #5d68ff;
+  --bubu-cta-text: #060010;
+  --bubu-icon-shadow: rgba(93, 104, 255, 0.22);
+}
+
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-background-color: #060010;
+  --ifm-background-surface-color: #060010;
+  --ifm-font-color-base: #f1eaff;
+  --ifm-color-primary: #d8ccff;
+  --ifm-color-primary-dark: #c6b5ff;
+  --ifm-color-primary-darker: #b49eff;
+  --ifm-color-primary-darkest: #a188ff;
+  --ifm-color-primary-light: #e6ddff;
+  --ifm-color-primary-lighter: #f1eaff;
+  --ifm-color-primary-lightest: #f8f4ff;
+  --ifm-navbar-background-color: rgba(6, 0, 16, 0.92);
+  --ifm-navbar-link-color: #ffffff;
+  --ifm-navbar-link-hover-color: #d8ccff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+  --bubu-surface-elevated: rgba(6, 0, 16, 0.92);
+  --bubu-surface-card: rgba(6, 0, 16, 0.78);
+  --bubu-surface-muted: rgba(6, 0, 16, 0.65);
+  --bubu-text-primary: #ffffff;
+  --bubu-text-secondary: rgba(255, 255, 255, 0.85);
+  --bubu-text-muted: rgba(255, 255, 255, 0.72);
+  --bubu-border-soft: rgba(216, 204, 255, 0.18);
+  --bubu-border-strong: rgba(113, 254, 193, 0.45);
+  --bubu-hero-title-gradient: linear-gradient(120deg, #ffffff 0%, #d8ccff 60%, #71fec1 100%);
+  --bubu-hero-title-shadow: 0 18px 45px rgba(113, 254, 193, 0.35);
+  --bubu-hero-subtitle: rgba(255, 255, 255, 0.78);
+  --bubu-hero-background: linear-gradient(180deg, rgba(6, 0, 16, 0.95) 0%, rgba(6, 0, 16, 0.7) 100%);
+  --bubu-button-secondary-text: rgba(255, 255, 255, 0.85);
+  --bubu-button-secondary-bg: rgba(6, 0, 16, 0.6);
+  --bubu-button-secondary-border: rgba(216, 204, 255, 0.35);
+  --bubu-button-secondary-hover-bg: rgba(113, 254, 193, 0.16);
+  --bubu-card-bg: rgba(9, 2, 20, 0.78);
+  --bubu-card-shadow: 0 20px 50px rgba(4, 0, 11, 0.6);
+  --bubu-card-hover-shadow: 0 26px 65px rgba(4, 0, 11, 0.8);
+  --bubu-section-background: radial-gradient(circle at top left, rgba(113, 254, 193, 0.12), transparent 45%);
+  --bubu-section-backdrop-a: rgba(93, 104, 255, 0.18);
+  --bubu-section-backdrop-b: rgba(216, 87, 255, 0.15);
+  --bubu-section-backdrop-c: rgba(113, 254, 193, 0.12);
+  --bubu-flow-wrapper-bg: linear-gradient(160deg, rgba(6, 0, 16, 0.95), rgba(6, 0, 20, 0.85));
+  --bubu-badge-background: rgba(113, 254, 193, 0.16);
+  --bubu-badge-border: rgba(113, 254, 193, 0.45);
+  --bubu-badge-text: #71fec1;
+  --bubu-icon-shadow: rgba(0, 0, 0, 0.55);
+}
+
+.navbar {
+  background: var(--ifm-navbar-background-color);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--bubu-border-soft);
+  border-radius: 30px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  margin: 10px;
+  position: inherit;
+}
+
+.navbar.navbar--fixed-top {
+  position: static;
+  top: 0;
+}
+
+.navbar__brand,
+.navbar__link,
+.navbar__items svg {
+  color: var(--ifm-navbar-link-color) !important;
+}
+
+.navbar__link:hover,
+.navbar__items svg:hover {
+  color: var(--ifm-navbar-link-hover-color) !important;
+}
+
+#lights {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+#lights canvas {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.bubu-ecosystem-toggle {
+  border: 1px solid var(--bubu-border-soft);
+  border-left: 4px solid var(--bubu-border-strong);
+  border-radius: 1rem;
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem 0.3rem;
+  background: var(--bubu-surface-card);
+  box-shadow: 0 20px 45px rgba(34, 26, 63, 0.08);
+}
+
+.bubu-ecosystem-toggle summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.bubu-ecosystem-toggle summary::-webkit-details-marker,
+.bubu-ecosystem-toggle summary::marker {
+  display: none;
+}
+
+.bubu-ecosystem-toggle__box {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.35rem;
+  border: 1px solid var(--bubu-border-soft);
+  background: rgba(93, 104, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.bubu-ecosystem-toggle__box::after {
+  content: '';
+  width: 0.65rem;
+  height: 0.35rem;
+  border: 2px solid transparent;
+  border-top: none;
+  border-right: none;
+  transform: rotate(-45deg);
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.bubu-ecosystem-toggle[open] .bubu-ecosystem-toggle__box {
+  border-color: var(--bubu-border-strong);
+  background: linear-gradient(120deg, #71fec1 0%, #5d68ff 100%);
+}
+
+.bubu-ecosystem-toggle[open] .bubu-ecosystem-toggle__box::after {
+  border-color: #080114;
+  opacity: 1;
+}
+
+.bubu-ecosystem-toggle strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.bubu-ecosystem-toggle small {
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--bubu-text-muted);
+}
+
+.bubu-ecosystem-toggle > div {
+  margin-top: 0.65rem;
+  color: var(--bubu-text-secondary);
+}
+
+.bubu-ecosystem-toggle ul {
+  margin-left: 1.35rem;
+  margin-bottom: 0.4rem;
+  line-height: 1.6;
+}
+
+.bubu-ecosystem-toggle p {
+  margin: 0 0 0.8rem;
+}
+
+.bubu-ecosystem-toggle--compact {
+  padding: 0.6rem 0.85rem 0.15rem;
+  margin: 0.9rem 0;
+}
+
+.bubu-ecosystem-toggle--compact strong {
+  font-size: 0.95rem;
 }

@@ -3,21 +3,208 @@
  * and scoped locally.
  */
 
+.heroWrapper {
+  position: relative;
+  min-height: calc(100vh - var(--ifm-navbar-height, 0px));
+}
+
 .heroBanner {
-  padding: 4rem 0;
-  text-align: center;
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  padding: calc(var(--ifm-navbar-height, 0px) + 2rem) 0 4rem;
+  min-height: calc(100vh - var(--ifm-navbar-height, 0px));
+  background: var(--bubu-hero-background);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  animation: fadeUp 0.9s ease-out 0.1s both;
+}
+
+.heroTitle {
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--bubu-hero-title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: var(--bubu-hero-title-shadow);
+}
+
+.heroSubtitle {
+  max-width: 46rem;
+  margin: 0;
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+  line-height: 1.65;
+  color: var(--bubu-hero-subtitle);
+  text-wrap: balance;
+  animation: floatUp 1.2s ease-out 0.25s both;
+}
+
+.heroButtons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;
+  margin-top: 2.75rem;
+}
+
+.ctaButton {
+  position: relative;
+  min-width: 16rem;
+  padding: 0.9rem 2.75rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(130deg, #71fec1 0%, #5d68ff 45%, #d857ff 100%);
+  color: var(--bubu-cta-text);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+  box-shadow: 0 12px 45px rgba(113, 254, 193, 0.4);
+  overflow: hidden;
+  animation: pulseGlow 3.2s ease-in-out infinite;
+}
+
+.ctaButton::before {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.65) 0%, transparent 55%);
+  opacity: 0.45;
+  transform: translate3d(-35%, -35%, 0) rotate(15deg);
+  transition: opacity 220ms ease;
+}
+
+.ctaButton::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -55%;
+  width: 45%;
+  height: 180%;
+  transform: skewX(-25deg) translateY(-50%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 45%, transparent 100%);
+  opacity: 0;
+}
+
+.ctaButton:hover,
+.ctaButton:focus-visible {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 18px 55px rgba(113, 254, 193, 0.55);
+}
+
+.ctaButton:hover::before,
+.ctaButton:focus-visible::before {
+  opacity: 0.7;
+}
+
+.ctaButton:hover::after,
+.ctaButton:focus-visible::after {
+  animation: buttonShine 0.9s ease forwards;
+}
+
+.secondaryButton {
+  position: relative;
+  min-width: 14rem;
+  padding: 0.85rem 2.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--bubu-button-secondary-border);
+  background: var(--bubu-button-secondary-bg);
+  color: var(--bubu-button-secondary-text);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  transition: transform 220ms ease, border-color 220ms ease, background 220ms ease, color 220ms ease;
+}
+
+.secondaryButton:hover,
+.secondaryButton:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--bubu-border-strong);
+  background: var(--bubu-button-secondary-hover-bg);
+  color: var(--bubu-text-primary);
+}
+
+.socialProofLogos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.logoPlaceholder {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-600);
+  opacity: 0.6;
+  letter-spacing: 0.05em;
 }
 
 @media screen and (max-width: 996px) {
   .heroBanner {
-    padding: 2rem;
+    padding: calc(var(--ifm-navbar-height, 0px) + 1.5rem) 1rem 3rem;
+  }
+
+  .heroButtons {
+    margin-top: 2rem;
   }
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes floatUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 12px 45px rgba(113, 254, 193, 0.35);
+  }
+  50% {
+    box-shadow: 0 18px 75px rgba(113, 254, 193, 0.55);
+  }
+}
+
+@keyframes buttonShine {
+  from {
+    opacity: 0.85;
+    transform: skewX(-25deg) translate(-55%, -50%);
+  }
+  to {
+    opacity: 0;
+    transform: skewX(-25deg) translate(160%, -50%);
+  }
 }

@@ -1,0 +1,201 @@
+.section {
+  padding: 6rem 0;
+  position: relative;
+}
+
+.wrapper {
+  position: relative;
+  border-radius: 26px;
+  padding: 3.5rem 3rem;
+  background: var(--bubu-flow-wrapper-bg);
+  border: 1px solid var(--bubu-border-soft);
+  overflow: hidden;
+}
+
+.wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% -10% 40%;
+  background: radial-gradient(circle, rgba(113, 254, 193, 0.22), transparent 65%);
+  filter: blur(40px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.header {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bubu-text-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2.1rem, 4vw, 2.8rem);
+  background: var(--bubu-hero-title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--bubu-text-muted);
+  line-height: 1.8;
+}
+
+.diagramPanel {
+  margin-bottom: 3rem;
+  border-radius: 18px;
+  border: 1px solid var(--bubu-border-soft);
+  background: var(--bubu-card-bg);
+  padding: 1.5rem;
+  box-shadow: var(--bubu-card-shadow);
+}
+
+.personaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.personaCard {
+  border-radius: 18px;
+  border: 1px solid var(--bubu-border-soft);
+  background: var(--bubu-card-bg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--bubu-card-shadow);
+}
+
+.personaTitle {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.personaSummary {
+  margin: 0;
+  color: var(--bubu-text-muted);
+  line-height: 1.6;
+}
+
+.personaHighlights {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: var(--bubu-text-secondary);
+  font-size: 0.95rem;
+}
+
+.personaHighlight {
+  position: relative;
+}
+
+.flowGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+}
+
+.flowCard {
+  position: relative;
+  padding: 2.3rem 2rem 2.4rem;
+  border-radius: 20px;
+  border: 1px solid var(--bubu-border-soft);
+  background: var(--bubu-card-bg);
+  display: flex;
+  gap: 1.6rem;
+  transition: transform 220ms ease, border-color 220ms ease;
+  box-shadow: var(--bubu-card-shadow);
+}
+
+.flowCard:hover,
+.flowCard:focus-within {
+  transform: translateY(-8px);
+  border-color: var(--bubu-border-strong);
+  box-shadow: var(--bubu-card-hover-shadow);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  background: var(--bubu-badge-background);
+  border: 1px solid var(--bubu-badge-border);
+  color: var(--bubu-badge-text);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.flowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.flowTitle {
+  margin: 0;
+  font-size: 1.6rem;
+  color: var(--bubu-text-primary);
+}
+
+.flowDescription {
+  margin: 0;
+  color: var(--bubu-text-muted);
+  line-height: 1.6;
+}
+
+.detailList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--bubu-text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.95rem;
+}
+
+.detailItem {
+  position: relative;
+}
+
+.detailItem::marker {
+  color: var(--bubu-badge-text);
+}
+
+@media screen and (max-width: 996px) {
+  .wrapper {
+    padding: 3rem 1.75rem;
+  }
+
+  .personaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .flowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .flowCard {
+    flex-direction: row;
+  }
+}

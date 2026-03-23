@@ -1,0 +1,114 @@
+.section {
+  padding: 5.5rem 0;
+}
+
+.wrapper {
+  border-radius: 24px;
+  border: 1px solid var(--bubu-border-soft);
+  background: var(--bubu-card-bg);
+  padding: 3.5rem 3rem;
+  box-shadow: var(--bubu-card-shadow);
+}
+
+.header {
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--bubu-text-muted);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 3.5vw, 2.6rem);
+  background: var(--bubu-hero-title-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--bubu-text-muted);
+  line-height: 1.7;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  border-radius: 20px;
+  border: 1px solid var(--bubu-border-soft);
+  background: var(--bubu-card-bg);
+  padding: 2.5rem 2.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--bubu-card-shadow);
+  transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.card:hover,
+.card:focus-within {
+  transform: translateY(-8px);
+  border-color: var(--bubu-border-strong);
+  box-shadow: var(--bubu-card-hover-shadow);
+}
+
+.cardEyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bubu-text-muted);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 1.45rem;
+  color: var(--bubu-text-primary);
+}
+
+.cardDescription {
+  margin: 0;
+  color: var(--bubu-text-muted);
+  line-height: 1.6;
+}
+
+.itemList {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: var(--bubu-text-secondary);
+  font-size: 0.95rem;
+}
+
+.item {
+  position: relative;
+}
+
+.cta {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+@media screen and (max-width: 1100px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 2.2rem 1.9rem;
+  }
+}

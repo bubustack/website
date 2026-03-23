@@ -73,12 +73,10 @@ function HomepageHeader() {
         />
         <div className={clsx('container', styles.heroContent)}>
           <Heading as="h1" className={clsx('hero__title', styles.heroTitle)}>
-            The GitOps-Native AI Orchestration Platform
+            Build, Deploy, and Scale Production-Grade AI Workflows on Kubernetes.
           </Heading>
           <p className={clsx('hero__subtitle', styles.heroSubtitle)}>
-            Bubustack brings infrastructure-as-code discipline to complex AI
-            workflows. Define, deploy, and operate reliable agents with the power
-            of Kubernetes and a declarative, community-driven ecosystem.
+            Bubustack is the open-source, cloud-native toolkit for AI engineers who build and operate complex, mission-critical workflows with confidence.
           </p>
           <div className={styles.heroButtons}>
             <Link
@@ -98,32 +96,14 @@ function HomepageHeader() {
   );
 }
 
-function SocialProof() {
-  return (
-    <section className="container text--center margin-vert--lg">
-      <p style={{marginBottom: '2rem', color: 'var(--ifm-color-emphasis-600)'}}>
-        TRUSTED BY TEAMS AT THE FOREFRONT OF AI INNOVATION
-      </p>
-      <div className={styles.socialProofLogos}>
-        <span className={styles.logoPlaceholder}>Datadog</span>
-        <span className={styles.logoPlaceholder}>Shopify</span>
-        <span className={styles.logoPlaceholder}>Spotify</span>
-        <span className={styles.logoPlaceholder}>Uber</span>
-        <span className={styles.logoPlaceholder}>Slack</span>
-      </div>
-    </section>
-  );
-}
-
 export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="The GitOps-Native AI Orchestration Platform"
-      description="The GitOps-Native AI Orchestration Platform for Production-Ready AI Workflows on Kubernetes">
+      title="Cloud-Native AI Orchestration Platform"
+      description="Bubustack is the open-source, cloud-native toolkit for AI engineers who build and operate complex, mission-critical workflows with confidence.">
       <HomepageHeader />
       <main>
-        <SocialProof />
         <HomepageFeatures />
         <ValueProps />
         <StoryFlow />
@@ -131,19 +111,19 @@ export default function Home(): ReactNode {
         <CommunitySpotlight />
         <section className="container margin-vert--xl">
           <div className="text--center">
-            <Heading as="h2">Launch production AI flows without trading speed for control</Heading>
+            <Heading as="h2">From Visual Builder to Git-Native Workflow</Heading>
             <p>
-              Install Bobrapet, pull EngramTemplates from the catalog, and wire Stories with
-              CEL-powered primitives so every change feels like a visual builder preview and every run
-              lands like an infrastructure-as-code apply—reviewed, observable, and Kubernetes-native.
-              Need a connector or transport we don’t have yet? Add it with the community and promote it
-              through the same Git workflows.
+            With Bubustack, you can visually design complex AI workflows and then manage them as code.
+            Use our pre-built templates and CEL-powered connectors to get started quickly.
+            Every change is versioned, reviewed, and deployed through standard Git workflows,
+            giving you the speed of a visual builder with the reliability of infrastructure-as-code.
+            If you need a new integration, you can easily build one and share it with the community.
             </p>
             <div className={styles.heroButtons}>
               <Link
                 className={clsx('button button--lg', styles.ctaButton)}
                 to="/docs/operator/quickstart">
-                Read the Quickstart
+                Explore the Docs
               </Link>
               <Link
                 className={clsx('button button--lg', styles.secondaryButton)}
