@@ -36,8 +36,7 @@ contracts to user-facing components.
 
 ## Module map
 
-BubuStack is a multi-module Go monorepo. Each directory is an independent
-Go module with its own `go.mod`.
+BubuStack comprises multiple independent Go modules, each with its own `go.mod`.
 
 | Module | Purpose | Scope |
 | --- | --- | --- |

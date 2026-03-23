@@ -59,6 +59,9 @@ Use the SDK to:
 - Emit outputs, logs, and structured errors.
 - Integrate with streaming transports when enabled.
 
+For a full development guide with interfaces, code examples, testing patterns,
+and template definitions, see `/docs/sdk/building-engrams.md`.
+
 ---
 
 ## Contracts and schemas

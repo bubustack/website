@@ -1,9 +1,3 @@
----
-title: Docs Style Guide
-sidebar_position: 1
-description: Writing and formatting conventions for BubuStack documentation.
----
-
 # Docs Style Guide
 
 This guide keeps BubuStack documentation consistent, clear, and easy to scan.

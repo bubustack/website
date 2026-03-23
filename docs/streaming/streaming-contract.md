@@ -141,7 +141,26 @@ Handoff directives emitted by connectors:
   `bobravoz_hub_replay_last_ack` (last acked sequence) and
   `bobravoz_hub_replay_unacked_current` (current unacked count).
 
-## 11) Transport settings
+## 11) Lifecycle hooks
+
+The hub emits lifecycle hook packets when streaming steps reach readiness milestones:
+
+- **`steprun.ready`** -- Fired when an individual streaming step connects to the hub.
+- **`storyrun.ready`** -- Fired when all streaming steps in the Story have connected.
+
+Steps consume hooks via `if` conditions that match on `packet.type`:
+
+```yaml
+if: '{{ eq (default "" packet.type) "storyrun.ready" }}'
+```
+
+Hooks are delivered as standard packets with Envelope kind `hook`. Each hook
+fires at most once per StoryRun per step combination.
+
+See `/docs/streaming/lifecycle-hooks.md` for the full hook packet structure,
+consumption patterns, and debugging tips.
+
+## 12) Transport settings
 
 Streaming backpressure, flow control, and delivery policies are configured through
 `Transport.spec.streaming` and `Story.spec.transports[].streaming`. See

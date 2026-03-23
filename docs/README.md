@@ -8,9 +8,10 @@ by topic. The docs are grouped by themes to keep navigation simple.
 
 ## Quick routes
 
-- **Building components**: `/docs/overview/component-ecosystem.md`, `/docs/runtime/inputs.md`, `/docs/api/errors.md`.
+- **Getting started**: `/docs/getting-started/prerequisites.md`, `/docs/getting-started/quickstart.md`.
+- **Building components**: `/docs/sdk/building-engrams.md`, `/docs/overview/component-ecosystem.md`, `/docs/runtime/inputs.md`, `/docs/api/errors.md`.
 - **Operating the platform**: `/docs/operator/configuration.md`, `/docs/runtime/lifecycle.md`, `/docs/observability/overview.md`.
-- **Streaming-first systems**: `/docs/streaming/streaming-contract.md`, `/docs/streaming/transport-settings.md`.
+- **Streaming-first systems**: `/docs/streaming/streaming-contract.md`, `/docs/streaming/transport-settings.md`, `/docs/streaming/lifecycle-hooks.md`.
 
 ## System pillars
 
@@ -22,7 +23,7 @@ starting docs for that area.
 - **Execution Engine** (Runs, scheduling, primitives): `/docs/runtime/primitives.md`, `/docs/runtime/lifecycle.md`
 - **Durable Semantics** (Delivery guarantees, idempotency): `/docs/overview/durable-semantics.md`
 - **Eventing and Triggers** (Impulses, triggers, dispatch): `/docs/overview/component-ecosystem.md`, `/docs/api/errors.md`
-- **Engram Ecosystem** (SDKs, contracts, registry): `/docs/overview/component-ecosystem.md`, `/docs/runtime/inputs.md`
+- **Engram Ecosystem** (SDKs, contracts, registry): `/docs/sdk/building-engrams.md`, `/docs/overview/component-ecosystem.md`, `/docs/runtime/inputs.md`
 - **Streaming and Real-Time Workflows** (Transport contract + settings): `/docs/streaming/streaming-contract.md`, `/docs/streaming/transport-settings.md`
 - **Observability and Debugging** (Tracing, metrics, logs): `/docs/observability/overview.md`
 - **Security, Governance, Multi-Tenancy** (Scoping, versioning, policies): `/docs/api/scoping.md`, `/docs/api/versioning.md`
@@ -30,9 +31,12 @@ starting docs for that area.
 
 ## Recommended path (start to finish)
 
+0. `/docs/getting-started/prerequisites.md` - System dependencies (cert-manager, S3 storage).
+0. `/docs/getting-started/quickstart.md` - Install BubuStack and run your first example.
 1. `/docs/overview/architecture.md` - System architecture, module map, and dependency rules.
 2. `/docs/overview/core.md` - The workflow model, key resources, and execution flow.
 3. `/docs/overview/component-ecosystem.md` - SDKs, contracts, registry patterns, and reliability semantics.
+3a. `/docs/sdk/building-engrams.md` - Go SDK guide: interfaces, testing, and template definitions.
 4. `/docs/overview/durable-semantics.md` - Delivery guarantees, recovery rules, and idempotency expectations.
 5. `/docs/operator/configuration.md` - Operator configuration keys and defaults.
 6. `/docs/api/crd-design.md` - Resource model, scopes, and relationships.
@@ -49,6 +53,7 @@ starting docs for that area.
 17. `/docs/api/errors.md` - Structured error contract for StepRuns.
 18. `/docs/streaming/streaming-contract.md` - Streaming data contract and message rules.
 19. `/docs/streaming/transport-settings.md` - Streaming backpressure, flow control, and delivery settings.
+20. `/docs/streaming/lifecycle-hooks.md` - Streaming lifecycle hooks (storyrun.ready, steprun.ready).
 
 ---
 
@@ -57,19 +62,22 @@ starting docs for that area.
 If you're building real-time pipelines, use this shorter path:
 
 1. `/docs/streaming/streaming-contract.md` - Message contract, ordering, and control semantics.
-2. `/docs/streaming/transport-settings.md` - Backpressure, routing, replay, partitioning, and recording.
-3. `/docs/observability/overview.md` - Streaming metrics, traces, and debugging tips.
-4. `/docs/overview/durable-semantics.md` - Delivery guarantees and replay expectations.
+2. `/docs/streaming/lifecycle-hooks.md` - Lifecycle hooks for streaming startup coordination.
+3. `/docs/streaming/transport-settings.md` - Backpressure, routing, replay, partitioning, and recording.
+4. `/docs/observability/overview.md` - Streaming metrics, traces, and debugging tips.
+5. `/docs/overview/durable-semantics.md` - Delivery guarantees and replay expectations.
 
 ---
 
 ## Docs layout (by folder)
 
+- `/docs/getting-started/` - Prerequisites, installation, and quickstart.
 - `/docs/overview/` - The conceptual model and durable semantics.
 - `/docs/operator/` - Operator configuration and runtime knobs.
 - `/docs/api/` - CRD design, scoping, versioning, and error contracts.
 - `/docs/runtime/` - Step semantics, expressions, inputs, payloads, caching, and lifecycle.
-- `/docs/streaming/` - Streaming contract and transport configuration.
+- `/docs/streaming/` - Streaming contract, transport configuration, and lifecycle hooks.
+- `/docs/sdk/` - Go SDK guide for building Engrams and Impulses.
 - `/docs/observability/` - Tracing, metrics, logs, and debugging workflows.
 
 ---
@@ -78,6 +86,8 @@ If you're building real-time pipelines, use this shorter path:
 
 | Topic | Start here | What you'll learn |
 | --- | --- | --- |
+| Getting started | `/docs/getting-started/quickstart.md` | Install BubuStack and run your first workflow. |
+| Prerequisites | `/docs/getting-started/prerequisites.md` | System dependencies, cert-manager, S3 storage. |
 | System architecture | `/docs/overview/architecture.md` | Module map, dependency graph, runtime topology, import rules. |
 | Workflow model | `/docs/overview/core.md` | Core resources, DAG execution, batch vs streaming. |
 | Component ecosystem | `/docs/overview/component-ecosystem.md` | SDKs, contracts, registry patterns, reliability semantics. |
@@ -96,7 +106,9 @@ If you're building real-time pipelines, use this shorter path:
 | Versioning | `/docs/api/versioning.md` | Version pinning and migration strategy. |
 | CRD migration | `/docs/api/migration.md` | API version lifecycle, upgrade procedures, conversion webhooks. |
 | Streaming contract | `/docs/streaming/streaming-contract.md` | Streaming message contract and termination rules. |
+| Lifecycle hooks | `/docs/streaming/lifecycle-hooks.md` | Streaming startup hooks (storyrun.ready, steprun.ready). |
 | Transport settings | `/docs/streaming/transport-settings.md` | Streaming backpressure, flow control, and delivery settings. |
+| SDK guide | `/docs/sdk/building-engrams.md` | Building Engrams and Impulses with the Go SDK. |
 
 ---
 

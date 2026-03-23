@@ -43,6 +43,11 @@ const sidebars: SidebarsConfig = {
     },
     {
       type: 'category',
+      label: 'Getting Started',
+      items: ['getting-started/prerequisites', 'getting-started/quickstart'],
+    },
+    {
+      type: 'category',
       label: 'Guides',
       items: [
         'guides/rag',
@@ -94,6 +99,7 @@ const sidebars: SidebarsConfig = {
       label: 'SDK',
       items: [
         'sdk/go-sdk',
+        'sdk/building-engrams',
         'sdk/first-workflow',
         'sdk/sdk-storage-offloading',
         'sdk/sdk-streaming-observability',
@@ -119,7 +125,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Streaming',
-      items: ['streaming/streaming-contract', 'streaming/transport-settings'],
+      items: ['streaming/streaming-contract', 'streaming/transport-settings', 'streaming/lifecycle-hooks'],
     },
     {
       type: 'category',
@@ -159,6 +165,15 @@ const sidebars: SidebarsConfig = {
         'community/roadmap',
         'community/support',
         'community/changelog',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Plans',
+      items: [
+        'plans/2026-03-05-claude-skills-design',
+        'plans/2026-03-10-crd-field-selectors-design',
+        'plans/2026-03-10-crd-field-selectors-plan',
       ],
     },
     'style-guide',
