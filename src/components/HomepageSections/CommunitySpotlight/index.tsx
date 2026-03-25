@@ -32,7 +32,7 @@ const links = [
   {label: 'Get Involved', to: '/docs/community/get-involved'},
   {label: 'Roadmap', to: '/docs/community/roadmap'},
   {label: 'GitHub', to: 'https://github.com/bubustack', external: true},
-  {label: 'Discord', to: 'https://discord.gg/bubustack', external: true},
+  {label: 'Discord', to: 'https://discord.gg/dysrB7D8H6', external: true},
   {label: 'Examples', to: 'https://github.com/bubustack/examples', external: true},
 ];
 

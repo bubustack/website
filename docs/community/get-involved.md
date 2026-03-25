@@ -12,7 +12,7 @@ we need contributors who want to build something meaningful.
 
 - **GitHub** — [bubustack](https://github.com/bubustack) organization. Code,
   issues, discussions, and examples all live here.
-- **Discord** — [Join our server](https://discord.gg/bubustack) for real-time
+- **Discord** — [Join our server](https://discord.gg/dysrB7D8H6) for real-time
   chat, questions, and collaboration.
 
 ## How to contribute

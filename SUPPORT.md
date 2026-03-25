@@ -14,7 +14,7 @@ For questions, discussions, and community support:
 
 - **GitHub Issues**: For bug reports and feature requests: https://github.com/bubustack/bobrapet/issues
 - **GitHub Discussions**: For general questions: https://github.com/orgs/bubustack/discussions
-- **Discord**: https://discord.gg/bubustack
+- **Discord**: https://discord.gg/dysrB7D8H6
 
 ### Triage and response SLAs (best effort)
 

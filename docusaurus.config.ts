@@ -153,7 +153,7 @@ const config: Config = {
             },
             {
               label: 'Discord',
-              href: 'https://discord.gg/bubustack',
+              href: 'https://discord.gg/dysrB7D8H6',
             },
           ],
         },
