@@ -1,3 +1,7 @@
+---
+title: Namespace and Scoping Rules
+description: Cross-namespace reference policy and ReferenceGrant behavior.
+---
 # Namespace and Scoping Rules
 
 This document defines namespace-scoping rules for references.

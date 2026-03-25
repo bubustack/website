@@ -1,8 +1,12 @@
+---
+title: CRD Design
+description: Resource model, relationships, and execution policy semantics for BubuStack CRDs.
+---
 # CRD Design: Bobrapet Resource Model
 
 This document describes the CRD design for bobrapet, including resource
 relationships, scope, and key behavioral features. It complements the
-workflow model in `/docs/overview/core.md` and the lifecycle details in `/docs/runtime/lifecycle.md`.
+workflow model in [Core](../overview/core.md) and the lifecycle details in [Lifecycle](../runtime/lifecycle.md).
 
 ## Who this is for
 
@@ -178,7 +182,7 @@ For streaming steps:
 - `step.with` is evaluated per packet by the hub using deterministic inputs only.
 - `step.runtime` is evaluated per packet by the hub and passed to the engram.
 
-See `/docs/runtime/expressions.md` for the evaluation matrix and allowed contexts.
+See [Expressions](../runtime/expressions.md) for the evaluation matrix and allowed contexts.
 
 ---
 
@@ -254,7 +258,7 @@ Represents a single step execution. It captures:
 
 - Resolved inputs and outputs
 - Exit code and exit class
-- Structured error payload (see `/docs/api/errors.md`)
+- Structured error payload (see [Error Contract](errors.md))
 - Retry scheduling metadata
 
 `status.conditions` is the canonical lifecycle signal. Phase fields are summaries.
@@ -851,7 +855,7 @@ and other execution properties.
 - Step outputs are validated against `EngramTemplate.spec.outputSchema`.
 - JSON Schema defaults are applied at runtime when fields are missing.
 
-See `/docs/runtime/inputs.md` and `/docs/runtime/payloads.md` for full details.
+See [Inputs](../runtime/inputs.md) and [Payloads](../runtime/payloads.md) for full details.
 
 ---
 
@@ -863,7 +867,7 @@ Streaming pipelines use a transport layer defined by:
 - `TransportBinding` (runtime binding per step or per run)
 - gRPC transport protos in `tractatus`
 
-The streaming contract is documented in `/docs/streaming/streaming-contract.md`.
+The streaming contract is documented in [Streaming Contract](../streaming/streaming-contract.md).
 
 ---
 
@@ -880,7 +884,7 @@ ReferenceGrant matches the referencing resource (`spec.from`) and the target
 resource (`spec.to`) and is always created in the target namespace.
 Admission webhooks and controllers both enforce the policy.
 
-See `/docs/api/scoping.md` for the full policy and examples.
+See [Scoping](scoping.md) for the full policy and examples.
 
 ---
 
@@ -888,15 +892,17 @@ See `/docs/api/scoping.md` for the full policy and examples.
 
 - Templates and Stories support explicit `spec.version` fields.
 - Runs record schema references for inputs and outputs.
-- CRD versioning and migration plans are covered in `/docs/api/migration.md`.
+- CRD versioning and migration plans are covered in [Migration](migration.md).
 
 ---
 
 ## Related docs
 
-- `/docs/overview/core.md`
-- `/docs/runtime/lifecycle.md`
-- `/docs/runtime/inputs.md`
-- `/docs/runtime/payloads.md`
-- `/docs/streaming/streaming-contract.md`
-- `/docs/api/scoping.md`
+- [Core](../overview/core.md)
+- [Lifecycle](../runtime/lifecycle.md)
+- [Inputs](../runtime/inputs.md)
+- [Payloads](../runtime/payloads.md)
+- [Streaming Contract](../streaming/streaming-contract.md)
+- [Scoping](scoping.md)
+- [Quickstart](../getting-started/quickstart.md) — Get running in under 10 minutes.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

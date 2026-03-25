@@ -17,47 +17,47 @@ type ValueCard = {
 const valueCards: ValueCard[] = [
   {
     eyebrow: 'Infrastructure as Code',
-    title: 'Brainstorm flows like a studio, deploy them like Kubernetes.',
+    title: 'Declare workflows, deploy with kubectl.',
     description:
-      'Sketch automations quickly, remix templates, and still land every change in Git with reviewable diffs. Bobrapet reconciles Stories, Engrams, and Impulses as CRDs so the experience feels like a whiteboard but ships with Terraform-grade rigor.',
+      'Stories, Engrams, and Impulses are Kubernetes CRDs. Apply them with your GitOps controller. The Bobrapet operator reconciles the rest — scheduling, retries, timeouts, and transport wiring.',
     cta: {
       label: 'Launch the Quickstart',
-      to: '/docs/operator/quickstart',
+      to: '/docs/getting-started/quickstart',
     },
     highlights: [
-      'Controller-managed drift detection and rollout policies for StoryRuns',
-      'Policy-as-code guardrails via CEL and admission webhooks',
-      'Median reconcile under 3 seconds across preview clusters',
+      'Drift detection and rollout via standard Kubernetes reconciliation',
+      'Admission webhooks validate schemas before anything runs',
+      'ConfigMap-based operator tuning — no proprietary config layer',
     ],
   },
   {
     eyebrow: 'Reusable Modules',
-    title: 'Publish automation building blocks with an ABI that lasts.',
+    title: 'Build once, use everywhere.',
     description:
-      'Author EngramTemplates with schema validation, SDK scaffolds, and promotion policies so contributors share AI components through a module registry instead of bespoke pipelines.',
+      'EngramTemplates define inputs, outputs, and runtime requirements with JSON Schema. Version them, promote across environments, and share through GitHub today. A dedicated registry is planned.',
     cta: {
       label: 'Create an Engram',
-      to: '/docs/engrams/authoring',
+      to: '/docs/sdk/building-engrams',
     },
     highlights: [
-      'Supports job, deployment, and stateful runtimes',
-      'Go SDK is GA; new language SDKs unlock as community contributors land them.',
-      'Catalog promotion workflow with semantic version gates, previews, and lint reports',
+      'Supports Job, Deployment, and StatefulSet runtimes',
+      'Go SDK with testkit and conformance suites',
+      'Versioned promotion keeps staging and prod in sync',
     ],
   },
   {
     eyebrow: 'State & Telemetry',
-    title: 'Instrument every run with metrics, traces, and replay context.',
+    title: 'Observe every run with traces, metrics, and structured errors.',
     description:
-      'StoryRuns stream structured logs, metrics, and payload checkpoints so operators treat automation state like a living doc—diffable, replayable, and demo-ready for the broader community.',
+      'StoryRuns and StepRuns emit OpenTelemetry traces and structured error reports. Payload offloading to S3-compatible storage keeps large outputs out of etcd.',
     cta: {
-      label: 'Inspect Story telemetry',
-      to: '/docs/reference/metrics',
+      label: 'View observability docs',
+      to: '/docs/observability/overview',
     },
     highlights: [
-      'Native Prometheus + OpenTelemetry exports',
-      'CLI snapshots for cross-environment debugging that stay reviewable in Git',
-      'Replay-ready payload history with redaction controls for regulated teams',
+      'OpenTelemetry trace propagation through the entire pipeline',
+      'Structured error contract with exit codes and retry classification',
+      'S3-compatible storage offloading for payloads and logs',
     ],
   },
 ];
@@ -68,15 +68,13 @@ export default function ValueProps(): ReactNode {
       <div className={styles.backdrop} aria-hidden="true" />
       <div className="container">
         <div className={styles.header}>
-          <span className={styles.eyebrow}>Why Bubustack</span>
+          <span className={styles.eyebrow}>Why BubuStack</span>
           <h2 className={styles.title}>
-            Built for founders shipping fast, trusted by operators keeping score.
+            Kubernetes-native AI workflows. No proprietary runtime. No lock-in.
           </h2>
           <p className={styles.subtitle}>
-            Bubustack blends the clarity of modern automation platforms—modular blocks, instant
-            previews, drag-and-drop mental models—with the discipline of infrastructure as code.
-            Everything lives in Git, every Engram is reusable, and new connectors land the moment the
-            community contributes them.
+            BubuStack is CRDs, controllers, and a Go SDK. Everything is declarative, everything lives
+            in Git, and every component is replaceable.
           </p>
         </div>
         <div className={styles.cardGrid}>

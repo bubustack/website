@@ -1,3 +1,7 @@
+---
+title: Run Lifecycle Contract
+description: StoryRun and StepRun phase semantics and terminal states.
+---
 # Run Lifecycle Contract
 
 This document defines the lifecycle contract for StoryRun and StepRun.

@@ -19,45 +19,45 @@ const toggles: Toggle[] = [
     eyebrow: 'Bobrapet Operator',
     title: 'Reconcile every Story like infrastructure.',
     summary:
-      'Install once, register CRDs, and let GitOps controllers drive Stories, StepRuns, and Impulses with admission-guarded safety.',
+      'Install once, register CRDs, and let your GitOps controller drive Stories, StepRuns, and Impulses with webhook-validated safety.',
     bullets: [
-      'Ships with StoryRun + StepRun controllers, transport adapters, and telemetry surfaces.',
-      'Compatible with Argo CD, Flux, and Faros thanks to standard manifests.',
-      'Policy bundles enforce CEL validation, resource quotas, and runtime profiles.',
+      'StoryRun, StepRun, Engram, Impulse, and Transport controllers.',
+      'Works with Argo CD, Flux, or any tool that applies Kubernetes manifests.',
+      'Admission webhooks validate schemas, immutability constraints, and references.',
     ],
     cta: {
       label: 'Operator quickstart',
-      to: '/docs/operator/quickstart',
+      to: '/docs/getting-started/quickstart',
     },
   },
   {
-    eyebrow: 'Reusable Engrams',
-    title: 'Package AI skills behind an ABI.',
+    eyebrow: 'Engrams & Impulses',
+    title: 'Package capabilities behind a stable interface.',
     summary:
-      'EngramTemplates define schema, transport expectations, and runtime class so teams publish once and promote everywhere.',
+      'Engrams process data. Impulses trigger workflows from external events. Both are defined as templates with schema validation and versioned promotion.',
     bullets: [
-      'SDK-driven scaffolds for Go today; additional language SDKs open when the community prioritizes them.',
-      'Supports short-lived Jobs, long-lived Deployments, or StatefulSets with autoscaling hints.',
-      'Catalog governance keeps semantic versions compatible across clusters.',
+      'Go SDK for batch, streaming, and trigger (Impulse) workloads.',
+      'Supports Jobs, Deployments, and StatefulSets with autoscaling hints.',
+      'Browse existing components on GitHub — or build your own.',
     ],
     cta: {
-      label: 'Engram authoring guide',
-      to: '/docs/engrams/authoring',
+      label: 'Building Engrams & Impulses',
+      to: '/docs/sdk/building-engrams',
     },
   },
   {
     eyebrow: 'Stories & Transports',
-    title: 'Compose flows and choose your data plane.',
+    title: 'Compose DAGs and choose your data plane.',
     summary:
-      'Stories stitch Engrams with primitives. Bobravoz gRPC is production-ready today, and new transports inherit the same spec when the community submits adapters.',
+      'Stories wire Engrams into workflows with conditions, parallel execution, retries, and approval gates. Bobravoz gRPC provides the streaming transport.',
     bullets: [
-      'Primitives cover conditionals, fan-out, loops, retries, and manual approval gates.',
-      'Transport selection is declarative per Story and traceable in Git history.',
-      'Telemetry streams (metrics/logs/traces) align to OpenTelemetry and Prometheus.',
+      'Primitives: conditions, parallel, sleep, stop, executeStory, gate, wait.',
+      'Transport selection is declarative per Story — traceable in Git.',
+      'OpenTelemetry traces and Prometheus metrics across the pipeline.',
     ],
     cta: {
-      label: 'Story design patterns',
-      to: '/docs/stories/patterns',
+      label: 'Streaming contract',
+      to: '/docs/streaming/streaming-contract',
     },
   },
 ];
@@ -67,13 +67,12 @@ export default function EcosystemToggles(): ReactNode {
     <section className={styles.section}>
       <div className="container">
         <header className={styles.header}>
-          <span className={styles.eyebrow}>Bubustack Ecosystem</span>
+          <span className={styles.eyebrow}>BubuStack Ecosystem</span>
           <h2 className={styles.title}>
-            Open the boxes you need, keep the rest tucked away until launch.
+            Three components. One platform.
           </h2>
           <p className={styles.subtitle}>
-            Every part of the stack remains available, but the details stay collapsed until you
-            check the box—perfect while we iterate in the open.
+            Each piece works independently. Together they form a complete AI workflow platform on Kubernetes.
           </p>
         </header>
         <div className={styles.grid}>

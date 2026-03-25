@@ -1,72 +1,69 @@
 ---
-title: Join the Community
+title: Community
 sidebar_position: 1
-description: Discover how to plug into the Bubustack community—working groups, discussions, and events.
+description: Join the BubuStack community — contribute, get recognized, grow your role.
 ---
-# Join the Community
+# Community
 
-:::info Quick scan
-- **Why**: Plug into the Bubustack community to influence the shared backlog, share Engrams, and get support.
-- **When**: Review this once you ship your first Story or want to participate in working groups.
-- **How**: Join the channels below, subscribe to meeting cadences, and contribute through curated pathways.
-:::
+BubuStack is built in the open. We're a small project with big ambitions, and
+we need contributors who want to build something meaningful.
 
-Bubustack is built in the open with operators, founders, and contributors shaping the backlog
-together. Whether you want to pilot new transports, publish Engram templates, or help design SDKs,
-there is a channel for you.
+## Where to find us
 
-## Where to Connect
+- **GitHub** — [bubustack](https://github.com/bubustack) organization. Code,
+  issues, discussions, and examples all live here.
+- **Discord** — [Join our server](https://discord.gg/bubustack) for real-time
+  chat, questions, and collaboration.
 
-- **GitHub Discussions** — Ask questions, share patterns, or propose features in
-  [bubustack/bobrapet discussions](https://github.com/bubustack/bobrapet/discussions).
-- **Community calls** — Bi-weekly calls spotlight blueprints, docs updates, and backlog discussions.
-  Subscribe to the community calendar in the discussions board.
-- **Working groups** — Topic-focused cohorts for Engram catalogs, transport adapters, and GitOps
-  enablement. Each group maintains a public Kanban and meeting notes.
-- **Social updates** — Follow [@bubustack on X](https://x.com/bubustack) for release highlights and
-  event reminders.
+## How to contribute
 
-## Working groups {#working-groups}
+1. **Pick something** — Browse [open issues](https://github.com/bubustack/bobrapet/issues)
+   or check the [Roadmap](roadmap.md) for what needs help.
+2. **Fork & branch** — Work from a feature branch. Keep commits scoped.
+3. **Test** — Add unit and integration tests. Use KinD for operator/transport changes.
+4. **PR** — Reference the issue, include context. Reviews target 2 business days.
 
-| Working group | Focus | Cadence | How to join |
-| --- | --- | --- | --- |
-| Operator Guild | Bobrapet upgrades, GitOps runbooks, incident reviews | Wednesdays @ 17:00 UTC (bi-weekly) | RSVP in [GitHub Discussions](https://github.com/bubustack/bobrapet/discussions/categories/operator-guild) |
-| Engram Catalog | Template reviews, ABI policy, security attestations | Thursdays @ 15:00 UTC (weekly) | Add yourself to the [catalog project board](https://github.com/orgs/bubustack/projects/1) |
-| Transport Council | Bobravoz scaling, future adapter contributions, edge pilots | Alternate Tuesdays @ 18:00 UTC | Subscribe to backlog updates in [`transport-council`](https://github.com/bubustack/bobrapet/discussions/categories/transport-roadmap) |
-| SDK Collective | Go GA, community-requested SDKs, tooling automation | Mondays @ 16:00 UTC (monthly) | Join the [SDK collective thread](https://github.com/bubustack/bobrapet/discussions/312) |
+### Contribution areas
 
-Meeting notes and recordings are published in the [community drive](https://github.com/bubustack/bobrapet/discussions/310).
+- **Operator** — Controllers, webhooks, CRDs, reconciliation logic.
+- **Transports** — Bobravoz gRPC and new transport implementations.
+- **SDK** — Go SDK, testing harnesses, new language SDKs.
+- **Engrams & Impulses** — New reusable components for the catalog.
+- **Docs & examples** — Tutorials, guides, production runbooks.
+- **Bug fixes** — Triage, reproduce, fix. Always welcome.
 
-## Guiding Principles
+### Coding standards
 
-- **Declarative-first** — We prioritise GitOps and reproducibility across every feature area.
-- **Composable by default** — Engrams, Stories, and transports all remain modular.
-- **Community-first backlog** — Upcoming work is captured in quarterly planning notes. Feedback is
-  incorporated before implementation begins, and nothing ships without community review.
+- Go: `gofmt`, `goimports`, `golangci-lint`.
+- TypeScript/React: repo ESLint rules.
+- YAML: deterministic, `kubectl apply --server-side` friendly.
 
-## Release cadence & community backlog
+## Contributor ladder
 
-- **Monthly drops** — Expect minor releases for Bobrapet, Bobravoz, and catalog templates once per
-  month with GitHub release notes and upgrade diff PRs.
-- **Quarterly backlog reviews** — Working groups share priorities in public RFC threads before
-  booking engineering time. Follow the pinned threads in Discussions for the latest snapshots.
-- **Beta programs** — New transports and SDKs run as opt-in betas via the Transport Council and SDK
-  Collective when contributors step forward.
+We follow an open contributor ladder modeled on CNCF practices:
 
-## How to Get Started
+| Role | How you get there | What you gain |
+| --- | --- | --- |
+| **Contributor** | Merge your first PR | Listed in CONTRIBUTORS, community recognition |
+| **Reviewer** | Consistent quality contributions, domain knowledge | Review permissions, input on design decisions |
+| **Maintainer** | Sustained contribution, trust from existing maintainers | Merge rights, release authority, project direction |
 
-1. Star the [`bubustack`](https://github.com/bubustack) repositories you rely on and enable release
-   notifications.
-2. Introduce yourself in Discussions with the workloads you’re building and tooling you already run.
-3. Join a working group board that matches your interests—operators can immediately help with docs,
-   runbooks, or reference architectures.
-4. Share back learnings! The best Engrams and Stories originate from real customer demand.
+Early contributors shape the project. The people who show up now will have
+outsized influence on where BubuStack goes.
 
-Ready to contribute code or docs? Jump to the [Contribution Guide](contributing.md). Need help from
-the core team? Visit [Support Channels](support.md).
+## Security & responsible disclosure
 
-## Next steps
+Follow the project security policy in
+[`SECURITY.md`](https://github.com/bubustack/website/blob/main/SECURITY.md).
+Report vulnerabilities through the GitHub Security Advisory form:
 
-- Browse open issues tagged `good first issue` in [Contribution pathways](contributing.md).
-- Share backlog feedback in the [Community contribution threads](https://github.com/bubustack/bobrapet/discussions).
-- Join an upcoming working group session via the calendar links above.
+- https://github.com/bubustack/bobrapet/security/advisories/new
+
+Do not report vulnerabilities in public issues.
+
+## Code of Conduct
+
+We enforce the [Code of Conduct](https://github.com/bubustack/website/blob/main/CODE_OF_CONDUCT.md)
+in every repo and channel. For moderation concerns, contact:
+
+- community@bubustack.com

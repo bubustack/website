@@ -1,24 +1,13 @@
 import type {SidebarsConfig} from '@docusaurus/plugin-content-docs';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
-/**
- * Creating a sidebar enables you to:
- - create an ordered group of docs
- - render a sidebar for each doc of that group
- - provide next/previous navigation
-
- The sidebars can be generated from the filesystem, or explicitly defined here.
-
- Create as many sidebars as you want.
- */
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
+    'overview',
     {
       type: 'category',
-      label: 'Ecosystem',
+      label: 'Getting Started',
       collapsed: false,
-      items: ['overview', 'ecosystem/architecture', 'ecosystem/storage-architecture', 'ecosystem/alternatives'],
+      items: ['getting-started/prerequisites', 'getting-started/quickstart'],
     },
     {
       type: 'category',
@@ -28,87 +17,13 @@ const sidebars: SidebarsConfig = {
         'overview/core',
         'overview/component-ecosystem',
         'overview/durable-semantics',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Operator',
-      items: [
-        'operator/quickstart',
-        'operator/day-two-operations',
-        'operator/configuration',
-        'operator/security',
-        'operator/troubleshooting',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Getting Started',
-      items: ['getting-started/prerequisites', 'getting-started/quickstart'],
-    },
-    {
-      type: 'category',
-      label: 'Guides',
-      items: [
-        'guides/rag',
-        'guides/automation',
-        'guides/inference',
-        'guides/agents',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'How-To',
-      items: [
-        'howto/enable-transport-tls',
-        'howto/handle-large-payloads',
-        'howto/tune-backpressure',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Engrams',
-      items: ['engrams/overview', 'engrams/authoring'],
-    },
-    {
-      type: 'category',
-      label: 'Stories',
-      items: [
-        'stories/overview',
-        'stories/syntax',
-        'stories/patterns',
-        'stories/impulses',
-        'stories/primitives',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Transports',
-      items: [
-        'transports/overview',
-        'transports/bobravoz',
-        'transports/bobravoz-deployment',
-        'transports/bobravoz-autoscaling',
-        'transports/bobravoz-metrics',
-        'transports/bobravoz-reference',
-        'transports/bobravoz-troubleshooting',
+        'overview/alternatives',
       ],
     },
     {
       type: 'category',
       label: 'SDK',
-      items: [
-        'sdk/go-sdk',
-        'sdk/building-engrams',
-        'sdk/first-workflow',
-        'sdk/sdk-storage-offloading',
-        'sdk/sdk-streaming-observability',
-        'sdk/sdk-audit-recommendations',
-        'sdk/sdk-user-guide',
-        'sdk/sdk-integration-guide',
-        'sdk/sdk-troubleshooting',
-        'sdk/sdk-api-surface',
-      ],
+      items: ['sdk/go-sdk', 'sdk/building-engrams'],
     },
     {
       type: 'category',
@@ -130,51 +45,22 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'API',
-      items: ['api/crd-design', 'api/scoping', 'api/versioning', 'api/errors', 'api/migration'],
+      items: ['api/crd-cheatsheet', 'api/crd-design', 'api/scoping', 'api/versioning', 'api/errors', 'api/migration'],
     },
     {
       type: 'category',
-      label: 'Reference',
-      items: [
-        'reference/api-reference',
-        'reference/reference-crds',
-        'reference/reference-config',
-        'reference/reference-metrics',
-        'reference/webhooks',
-        'reference/errors',
-        'reference/grpc',
-        'reference/threat-model',
-      ],
+      label: 'Operator',
+      items: ['operator/profiles', 'operator/configuration'],
     },
     {
       type: 'category',
       label: 'Observability',
-      items: ['observability/overview'],
-    },
-    {
-      type: 'category',
-      label: 'Contracts',
-      items: ['contracts/overview'],
+      items: ['observability/overview', 'observability/runbook'],
     },
     {
       type: 'category',
       label: 'Community',
-      items: [
-        'community/get-involved',
-        'community/contributing',
-        'community/roadmap',
-        'community/support',
-        'community/changelog',
-      ],
-    },
-    {
-      type: 'category',
-      label: 'Plans',
-      items: [
-        'plans/2026-03-05-claude-skills-design',
-        'plans/2026-03-10-crd-field-selectors-design',
-        'plans/2026-03-10-crd-field-selectors-plan',
-      ],
+      items: ['community/get-involved', 'community/roadmap'],
     },
     'style-guide',
   ],

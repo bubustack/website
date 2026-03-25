@@ -1,3 +1,7 @@
+---
+title: Streaming Lifecycle Hooks
+description: Hook packet model and readiness-trigger semantics.
+---
 # Streaming Lifecycle Hooks
 
 Lifecycle hooks are special packets emitted by the streaming hub when key
@@ -169,7 +173,9 @@ given key, it will not fire again for the lifetime of that StoryRun session.
 
 ## Related docs
 
-- `/docs/streaming/streaming-contract.md` -- Streaming message contract and termination rules.
-- `/docs/streaming/transport-settings.md` -- Backpressure, flow control, and delivery settings.
-- `/docs/runtime/expressions.md` -- Template syntax and `packet.*` context variables.
-- `/docs/runtime/lifecycle.md` -- StoryRun/StepRun phases and terminal semantics.
+- [Streaming Contract](streaming-contract.md) — Streaming message contract and termination rules.
+- [Transport Settings](transport-settings.md) — Backpressure, flow control, and delivery settings.
+- [Expressions](../runtime/expressions.md) — Template syntax and `packet.*` context variables.
+- [Lifecycle](../runtime/lifecycle.md) — StoryRun/StepRun phases and terminal semantics.
+- [Quickstart](../getting-started/quickstart.md) — Get running in under 10 minutes.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

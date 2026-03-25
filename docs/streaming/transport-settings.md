@@ -1,3 +1,7 @@
+---
+title: Transport Streaming Settings
+description: Structured streaming settings for backpressure and delivery.
+---
 # Transport Streaming Settings
 
 This document describes the structured streaming settings that control buffering,

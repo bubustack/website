@@ -21,6 +21,15 @@
   background: var(--bubu-hero-background);
 }
 
+.heroStaticBackdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 25%, rgba(113, 254, 193, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 20%, rgba(216, 87, 255, 0.15), transparent 50%),
+    linear-gradient(180deg, rgba(6, 0, 16, 0.88), rgba(6, 0, 16, 0.62));
+}
+
 .heroContent {
   position: relative;
   z-index: 1;

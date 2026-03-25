@@ -1,3 +1,7 @@
+---
+title: Versioning and Pinning
+description: How spec.version and reference pinning work across Stories and components.
+---
 # Versioning and Pinning
 
 This document defines how workflow and component versioning works in BubuStack.
@@ -81,4 +85,4 @@ This keeps version changes explicit and prevents implicit behavior drift.
 
 For the CRD API version lifecycle (`v1alpha1` → `v1beta1` → `v1`), upgrade
 procedures, conversion webhook plans, and deprecation policy, see
-`/docs/api/migration.md`.
+[Migration](migration.md).

@@ -1,3 +1,7 @@
+---
+title: Operator Configuration
+description: All operator config keys, defaults, precedence, and runtime behavior.
+---
 # Operator Configuration
 
 BubuStack controllers read operator configuration from a ConfigMap. The default
@@ -165,15 +169,26 @@ Priority aging can be enabled per queue to prevent starvation.
 
 ---
 
+## Loop Primitives
+
+| Key | Default | Purpose | Why it exists |
+| --- | --- | --- | --- |
+| `loop.max-iterations` | `10000` | Maximum iterations per loop step. | Prevents unbounded loops. |
+| `loop.default-batch-size` | `100` | Default batch size for loop iterations. | Controls processing granularity. |
+| `loop.max-batch-size` | `1000` | Maximum batch size per iteration. | Prevents memory issues. |
+| `loop.max-concurrency` | `10` | Concurrent loop iterations. | Controls parallelism within loops. |
+| `loop.max-concurrency-limit` | `50` | Hard cap on loop concurrency. | Safety valve for cluster load. |
+
+---
+
 ## Templating
 
 | Key | Default | Purpose | Why it exists |
 | --- | --- | --- | --- |
 | `templating.evaluation-timeout` | `30s` | Timeout for template evaluation. | Prevents slow templates from blocking reconciliation. |
-| `templating.max-expression-length` | `1000` | Maximum expression length. | Limits resource use and abuse. |
 | `templating.max-output-bytes` | `65536` | Maximum evaluated output size. | Avoids large payload explosions. |
 | `templating.deterministic` | `false` | Restricts non-deterministic helpers. | Improves replay safety. |
-| `templating.offloaded-data-policy` | `inject` | How to handle templates that reference offloaded data. | Controls correctness vs convenience. |
+| `templating.offloaded-data-policy` | `inject` | How to handle templates that reference offloaded data. `error`: fail evaluation. `inject`: materialize pod to hydrate + re-evaluate (requires `materialize-engram`). `controller`: in-process S3 hydration (no extra pod). Per-Story override: annotation `bubustack.io/controller-resolve: "true"`. | Controls correctness vs convenience. |
 | `templating.materialize-engram` | `materialize` | Engram used to materialize offloaded refs. | Centralizes hydration behavior. |
 
 ---
@@ -314,3 +329,11 @@ export OTEL_SERVICE_NAME=bobrapet-operator
 | `template.max-concurrent-reconciles` | `2` | Worker count for Template reconciles (`0` uses controller default). | Templates change rarely. |
 | `template.rate-limiter.base-delay` | `500ms` | Base delay for Template backoff. | Avoids hot loops. |
 | `template.rate-limiter.max-delay` | `10m` | Max delay for Template backoff. | Keeps retries bounded. |
+
+## Related docs
+
+- [Prerequisites](../getting-started/prerequisites.md) — System dependencies and storage setup.
+- [Quickstart](../getting-started/quickstart.md) — Get running in under 10 minutes.
+- [Architecture](../overview/architecture.md) — System architecture and module map.
+- [CRD Design](../api/crd-design.md) — CRD resource model and relationships.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

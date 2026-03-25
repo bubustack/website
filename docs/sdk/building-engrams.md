@@ -1,3 +1,7 @@
+---
+title: Building Engrams and Impulses
+description: Component authoring workflow with SDK interfaces and testing.
+---
 # Building Engrams and Impulses
 
 This guide covers the Go SDK (`bubu-sdk-go`) for building Engrams (data processing
@@ -184,7 +188,7 @@ func main() {
 | `Metadata` | Tracing info (StoryRunID, StepName, etc.) |
 | `Payload` | JSON-encoded data |
 | `Audio` / `Video` / `Binary` | Media frames for real-time pipelines |
-| `Inputs` | CEL-resolved step configuration |
+| `Inputs` | Template-resolved step configuration |
 | `Envelope` | Stream sequencing metadata |
 
 ---
@@ -304,7 +308,7 @@ The SDK auto-classifies errors based on type (storage, serialization, validation
 etc.). You can also implement `StructuredErrorProvider` on your errors for custom
 classification.
 
-See `/docs/api/errors.md` for the full contract.
+See [Error Contract](../api/errors.md) for the full contract.
 
 ---
 
@@ -550,14 +554,13 @@ The operator injects these environment variables into component pods:
 
 ## Development workflow
 
-1. **Scaffold** a new component with `bubu component init`.
+1. **Create** a new component repo (see project structure below).
 2. **Implement** the Engram or Impulse interface.
 3. **Test locally** with `testkit` harnesses (no cluster needed).
 4. **Run conformance** tests to validate contracts.
 5. **Build** a Docker image.
 6. **Define** an `EngramTemplate` or `ImpulseTemplate` YAML.
-7. **Publish** to the registry with `bubu publish`.
-8. **Deploy** by referencing the template in a Story.
+7. **Deploy** by referencing the template in a Story.
 
 ### Project structure
 
@@ -588,16 +591,18 @@ data:
 - **Config hydration**: Storage refs in config values are resolved at startup.
 
 You do not need to handle storage references manually. See
-`/docs/runtime/payloads.md` for size limits and offload rules.
+[Payloads](../runtime/payloads.md) for size limits and offload rules.
 
 ---
 
 ## Related docs
 
-- `/docs/overview/component-ecosystem.md` -- Component ecosystem overview.
-- `/docs/overview/durable-semantics.md` -- Delivery guarantees and idempotency.
-- `/docs/api/errors.md` -- Structured error contract.
-- `/docs/runtime/inputs.md` -- Schema defaults and validation.
-- `/docs/runtime/payloads.md` -- Storage refs and size limits.
-- `/docs/streaming/streaming-contract.md` -- Streaming message contract.
-- `/docs/observability/overview.md` -- Tracing, metrics, and debugging.
+- [Component Ecosystem](../overview/component-ecosystem.md) -- Component ecosystem overview.
+- [Durable Semantics](../overview/durable-semantics.md) -- Delivery guarantees and idempotency.
+- [Error Contract](../api/errors.md) -- Structured error contract.
+- [Inputs](../runtime/inputs.md) -- Schema defaults and validation.
+- [Payloads](../runtime/payloads.md) -- Storage refs and size limits.
+- [Streaming Contract](../streaming/streaming-contract.md) — Streaming message contract.
+- [Observability](../observability/overview.md) — Tracing, metrics, and debugging.
+- [Quickstart](../getting-started/quickstart.md) — Get running in under 10 minutes.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

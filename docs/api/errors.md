@@ -1,9 +1,13 @@
+---
+title: Structured Errors
+description: Structured StepRun error contract and retry/exit classification fields.
+---
 # Structured Errors (StepRun.status.error)
 
 StepRun failures emit a structured error payload in `StepRun.status.error`.
 The payload is versioned and must conform to the JSON Schema below:
 
-- `/docs/contracts/steprun-error.schema.json`
+- See the schema definition below.
 
 ## Who this is for
 

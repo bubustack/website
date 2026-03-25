@@ -40,54 +40,53 @@ const flow: FlowStep[] = [
     badge: '01',
     title: 'Commit the Story',
     description:
-      'Author Story, EngramTemplate, and Impulse manifests alongside application code so the narrative lives in Git. CEL guards and schemas provide intent before anything runs.',
+      'Write Story, Engram, and Impulse manifests alongside your application code. Push to Git.',
     details: [
-      'Code review enforces collaboration between builders and operators.',
-      'Git history captures template upgrades, environment promotion, and links to community requests.',
+      'Code review catches issues before anything runs.',
+      'Git history tracks every change to your workflows.',
     ],
   },
   {
     badge: '02',
     title: 'Reconcile with Bobrapet',
     description:
-      'GitOps controllers apply manifests; the Bobrapet operator synthesises runtimes, attaches Engrams, and wires transports.',
+      'Your GitOps controller applies the manifests. Bobrapet creates runtimes, wires transports, and schedules steps.',
     details: [
-      'Bobravoz carries traffic today with latency histograms emitted per StepRun.',
-      'The same declarative spec powers future adapters when the community contributes them.',
-      'Policy diffing replaces drag-and-drop wizards so compliance stays visible.',
+      'Bobravoz gRPC handles streaming transport with per-step tracing.',
+      'Admission webhooks validate resources before creation.',
     ],
   },
   {
     badge: '03',
     title: 'Measure StoryRuns',
     description:
-      'StoryRuns stream metrics, traces, and payload checkpoints to your observability stack for instant retrospection.',
+      'StoryRuns emit traces, structured errors, and payload references to your observability stack.',
     details: [
-      'Dashboards chart median run latency, tail retries, and Engram saturation.',
-      'Replay runs or promote versions downstream with GitOps diffs.',
+      'OpenTelemetry traces across the full workflow lifecycle.',
+      'Replay or debug failed runs from stored outputs.',
     ],
   },
 ];
 
 const personas: PersonaCallout[] = [
   {
-    persona: 'Founders & Product',
+    persona: 'Developers',
     summary:
-      'Prove value fast with reusable Engrams and Story templates that map directly to user journeys.',
+      'Build Engrams with the Go SDK. Test locally with the testkit. Push to Git and let the operator handle the rest.',
     highlights: [
-      'Launch new Stories in hours, not sprints, by cloning EngramTemplates for RAG, agents, and governance.',
-      'Community boards tie Git commits to catalog releases and shared priorities.',
-      'StoryRun telemetry surfaces activation, retention, and cost-per-run insights you can show investors.',
+      'Type-safe configuration and input binding',
+      'Local testing without a Kubernetes cluster',
+      'Structured errors with retry classification',
     ],
   },
   {
-    persona: 'Operators & SREs',
+    persona: 'Platform Engineers',
     summary:
-      'Keep the mesh reliable with Kubernetes-native guardrails, transport choice, and full-fidelity telemetry.',
+      'Deploy the operator, tune the ConfigMap, set up observability. Standard Kubernetes operations.',
     highlights: [
-      'GitOps reconcile proves drift-free environments with <3s median apply time.',
-      'Sustain 25k StepRun messages/min on Bobravoz with end-to-end tracing and SLOs.',
-      'Coordinate new transport work through open discussions and shared backlogs.',
+      'ConfigMap-based tuning for scheduling, retries, and resources',
+      'OpenTelemetry integration for traces and metrics',
+      'Namespace-scoped RBAC and cross-namespace policies',
     ],
   },
 ];
@@ -100,11 +99,10 @@ export default function StoryFlow(): ReactNode {
           <header className={styles.header}>
             <span className={styles.eyebrow}>How it works</span>
             <h2 className={styles.title}>
-              Git commit to StoryRun telemetry in one declarative motion.
+              From Git commit to running workflow.
             </h2>
             <p className={styles.subtitle}>
-              Bubustack visualises the full lifecycle so founders, operators, and contributors know
-              exactly where value lands—and how community contributions unlock the next transport or SDK.
+              BubuStack follows a simple path: declare resources in Git, let the operator reconcile, observe the results.
             </p>
           </header>
           <div className={styles.diagramPanel}>

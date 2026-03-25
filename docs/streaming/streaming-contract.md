@@ -1,3 +1,7 @@
+---
+title: Streaming Contract
+description: Message validity, ordering, replay, and control directives.
+---
 # Streaming Contract (Engrams + Connectors)
 
 This document defines the runtime contract for streaming Engrams, transport connectors,
@@ -157,11 +161,11 @@ if: '{{ eq (default "" packet.type) "storyrun.ready" }}'
 Hooks are delivered as standard packets with Envelope kind `hook`. Each hook
 fires at most once per StoryRun per step combination.
 
-See `/docs/streaming/lifecycle-hooks.md` for the full hook packet structure,
+See [Lifecycle Hooks](lifecycle-hooks.md) for the full hook packet structure,
 consumption patterns, and debugging tips.
 
 ## 12) Transport settings
 
 Streaming backpressure, flow control, and delivery policies are configured through
 `Transport.spec.streaming` and `Story.spec.transports[].streaming`. See
-`/docs/streaming/transport-settings.md` for the full schema and examples.
+[Transport Settings](transport-settings.md) for the full schema and examples.

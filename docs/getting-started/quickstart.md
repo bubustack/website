@@ -1,53 +1,100 @@
+---
+title: Quickstart
+sidebar_position: 2
+description: Get BubuStack running on a local cluster and deploy your first workflow.
+---
 # Quickstart
 
 Get BubuStack running on a local cluster and deploy your first workflow in
 under 10 minutes.
 
-## Who this is for
-
-- Developers trying BubuStack for the first time.
-- Platform operators evaluating the system.
-
-## What you'll get
-
-- A working BubuStack installation on a local kind cluster.
-- Storage and cert-manager configured and ready.
-- Your first example workflow running.
+**Before you start**, make sure you have the [prerequisites](prerequisites.md)
+installed: [kubectl](https://kubernetes.io/docs/tasks/tools/),
+[Helm](https://helm.sh/docs/intro/install/),
+[kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation), and
+[Docker](https://docs.docker.com/get-docker/).
 
 ## Overview
 
 ```
-1. Install cert-manager          (webhook TLS)
-2. Install S3 storage            (payload offloading)
-3. Install BubuStack controllers (bobrapet + bobravoz-grpc)
-4. Deploy an example             (start experimenting)
+1. Create a local cluster         (kind)
+2. Install cert-manager           (webhook TLS)
+3. Install S3 storage             (payload offloading)
+4. Install BubuStack controllers  (bobrapet + bobravoz-grpc)
+5. Deploy an example              (start experimenting)
 ```
 
 ## Step 1: Create a cluster
-
-If you don't have a cluster, create one with kind:
 
 ```bash
 kind create cluster --name bubustack
 ```
 
-## Step 2: Install system dependencies
-
-BubuStack ships a convenience script that installs cert-manager and SeaweedFS
-in one command:
+Verify the cluster is running:
 
 ```bash
-# From the bubustack workspace root
-./examples/storage/seaweedfs/install.sh
+kubectl cluster-info
 ```
 
-This script:
-1. Installs **cert-manager** v1.19.2 and waits for it to become ready.
-2. Creates the `seaweedfs` namespace and an anonymous-access config secret.
-3. Deploys **SeaweedFS** via Helm with a pre-configured `bubu-default` bucket.
+## Step 2: Install cert-manager
 
-If you prefer to install dependencies manually or use a different storage
-backend, see `/docs/getting-started/prerequisites.md`.
+BubuStack admission webhooks require TLS certificates.
+[cert-manager](https://cert-manager.io/) handles provisioning and rotation.
+
+```bash
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
+```
+
+Wait for cert-manager to become ready:
+
+```bash
+kubectl wait --for=condition=ready pod \
+  -l app.kubernetes.io/instance=cert-manager \
+  -n cert-manager --timeout=300s
+```
+
+## Step 3: Install SeaweedFS (S3 storage)
+
+BubuStack offloads large payloads to S3-compatible storage. The quickstart uses
+[SeaweedFS](https://github.com/seaweedfs/seaweedfs) — a lightweight S3 server.
+
+### Add the Helm repo
+
+```bash
+helm repo add seaweedfs https://seaweedfs.github.io/seaweedfs/helm
+helm repo update
+```
+
+### Create the namespace and anonymous-access config
+
+```bash
+kubectl create namespace seaweedfs --dry-run=client -o yaml | kubectl apply -f -
+```
+
+```bash
+kubectl create secret generic seaweedfs-s3-anon-config -n seaweedfs \
+  --from-literal='seaweedfs_s3_config={"identities":[{"name":"anonymous","actions":["Read","Write","List","Tagging","Admin"]}]}' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+### Install SeaweedFS via Helm
+
+```bash
+helm upgrade --install seaweedfs -n seaweedfs \
+  seaweedfs/seaweedfs \
+  --set filer.s3.enabled=false \
+  --set s3.enabled=true \
+  --set s3.replicas=1 \
+  --set s3.port=8333 \
+  --set s3.enableAuth=true \
+  --set s3.existingConfigSecret=seaweedfs-s3-anon-config \
+  --set 's3.createBuckets[0].name=bubu-default' \
+  --set 's3.createBuckets[0].ttl=7d' \
+  --set 's3.createBuckets[0].objectLock=true' \
+  --set 's3.createBuckets[0].versioning=Enabled'
+```
+
+This creates a `bubu-default` bucket with 7-day TTL and object locking enabled.
 
 ### Verify storage is running
 
@@ -56,7 +103,7 @@ kubectl get pods -n seaweedfs
 # All pods should be Running/Ready
 ```
 
-## Step 3: Install BubuStack
+## Step 4: Install BubuStack
 
 Install the two core controllers via Helm:
 
@@ -92,9 +139,18 @@ kubectl api-resources | grep bubustack
 # Should list: stories, storyruns, stepruns, engrams, impulses, transports, etc.
 ```
 
-## Step 4: Deploy an example
+## Step 5: Deploy an example
 
-Each example in the `examples/` directory follows the same pattern:
+Each example in the [examples repository](https://github.com/bubustack/examples)
+follows the same pattern:
+
+```bash
+git clone https://github.com/bubustack/examples.git
+cd examples
+```
+
+Expected:
+- `examples/batch/` and `examples/realtime/` directories exist.
 
 ```
 bootstrap.yaml   Namespace, secrets, RBAC, transport definitions
@@ -134,25 +190,30 @@ kubectl apply -f impulse.yaml
 ```bash
 # Check that Engrams are ready
 kubectl get engrams -A
+# Expected: Engram objects are listed in your target namespace.
 
 # Check that the Story is registered
 kubectl get stories -A
+# Expected: Story resources are present and accepted by the API server.
 
 # Watch for StoryRuns (triggered by the Impulse)
 kubectl get storyruns -A --watch
+# Expected: a StoryRun appears once the trigger condition is met.
 ```
 
 ## What's next
 
 - Read the example's `README.md` for detailed configuration options.
-- Explore other examples in `examples/batch/` and `examples/realtime/`.
-- See `/docs/overview/core.md` for the full workflow model.
-- See `/docs/overview/component-ecosystem.md` to build your own Engrams.
-- See `/docs/streaming/lifecycle-hooks.md` for streaming lifecycle events.
+- Explore other examples in the [examples repository](https://github.com/bubustack/examples).
+- See [Core](../overview/core.md) for the full workflow model.
+- See [Building Engrams](../sdk/building-engrams.md) to build your own components.
+- See [Lifecycle Hooks](../streaming/lifecycle-hooks.md) for streaming lifecycle events.
 
 ## Related docs
 
-- `/docs/getting-started/prerequisites.md` -- System dependencies and storage options.
-- `/docs/overview/architecture.md` -- System architecture and module map.
-- `/docs/operator/configuration.md` -- Operator configuration keys and defaults.
-- `/docs/overview/component-ecosystem.md` -- Building custom Engrams and Impulses.
+- [Prerequisites](prerequisites.md) — CLI tools and system dependencies.
+- [Architecture](../overview/architecture.md) — System architecture and module map.
+- [Operator Configuration](../operator/configuration.md) — Operator configuration keys and defaults.
+- [Component Ecosystem](../overview/component-ecosystem.md) — Building custom Engrams and Impulses.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.
+- [Get Involved](../community/get-involved.md) — Join the community.

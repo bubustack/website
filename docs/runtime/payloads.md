@@ -1,3 +1,7 @@
+---
+title: Payloads and Storage References
+description: Inline payload limits, storage refs, and offload guidance.
+---
 # Payloads and Storage References
 
 This document defines the payload contract for StoryRun inputs/outputs and step data.

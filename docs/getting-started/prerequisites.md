@@ -1,27 +1,39 @@
+---
+title: Prerequisites
+sidebar_position: 1
+description: What you need before installing BubuStack.
+---
 # Prerequisites
 
 BubuStack runs on Kubernetes and depends on a small set of external components.
-This page lists everything you need before installing the platform.
+This page lists everything you need before following the [Quickstart](quickstart.md).
 
-## Who this is for
+## Kubernetes cluster
 
-- Platform operators deploying BubuStack for the first time.
-- Developers setting up a local environment for experimentation.
+BubuStack targets **Kubernetes 1.30+**. Any conformant cluster works:
 
-## What you'll get
+| Option | Notes |
+|--------|-------|
+| [kind](https://kind.sigs.k8s.io/) | Recommended for local development. Used in the quickstart. |
+| [k3s](https://k3s.io/) | Lightweight, good for edge and CI. |
+| [minikube](https://minikube.sigs.k8s.io/) | Alternative local cluster. |
+| EKS / GKE / AKS | Managed Kubernetes. Any conformant provider works. |
+| [kubeadm](https://kubernetes.io/docs/reference/setup-tools/kubeadm/) | Bare-metal or VM-based clusters. |
 
-- The full list of system dependencies and why each is needed.
-- Compatible storage backends for payload offloading.
-- Minimum Kubernetes version requirements.
+## CLI tools
 
-## Kubernetes
+You need these tools installed locally:
 
-BubuStack targets **Kubernetes 1.30+**. Any conformant cluster works: kind, k3s,
-EKS, GKE, AKS, or bare-metal kubeadm.
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [kubectl](https://kubernetes.io/docs/tasks/tools/) | 1.30+ | Kubernetes CLI |
+| [Helm](https://helm.sh/docs/intro/install/) | 3.x | Package manager for Kubernetes |
+| [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) | 0.20+ | Local cluster (if not using a remote cluster) |
+| [Docker](https://docs.docker.com/get-docker/) | 20+ | Container runtime (required by kind) |
 
-For local development, [kind](https://kind.sigs.k8s.io/) is recommended.
+## System dependencies
 
-## Dependencies
+These are installed as part of the [Quickstart](quickstart.md), but listed here for reference:
 
 ### cert-manager
 
@@ -31,20 +43,10 @@ certificate provisioning and rotation.
 
 **Version:** v1.19+ recommended.
 
-Install:
-
-```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
-kubectl wait --for=condition=ready pod \
-  -l app.kubernetes.io/instance=cert-manager \
-  -n cert-manager --timeout=300s
-```
-
 ### S3-compatible object storage
 
 BubuStack offloads large payloads, outputs, and logs to object storage using the
-S3 API. Any S3-compatible backend works. Support for additional storage APIs
-(GCS, Azure Blob) is planned for future releases.
+S3 API. Any S3-compatible backend works.
 
 **Compatible backends:**
 
@@ -57,26 +59,24 @@ S3 API. Any S3-compatible backend works. Support for additional storage APIs
 | [MinIO](https://min.io/) | Popular S3-compatible server. |
 | AWS S3 | Native S3. |
 
-The quickstart uses SeaweedFS for simplicity. See `/docs/getting-started/quickstart.md`
-for the install steps.
-
-**Required configuration:**
+### Storage configuration
 
 The operator needs these settings (configured via the operator ConfigMap or Helm
 values):
 
 | Key | Description |
 |-----|-------------|
-| `controller.storage.s3.bucket` | Bucket name (default: `bubu-default`) |
-| `controller.storage.s3.region` | S3 region (default: `us-east-1`) |
+| `controller.storage.s3.bucket` | Bucket name (no default — must be configured) |
+| `controller.storage.s3.region` | S3 region (no default — must be configured) |
 | `controller.storage.s3.endpoint` | S3 endpoint URL |
 | `controller.storage.s3.use-path-style` | Use path-style addressing (required for most non-AWS backends) |
 | `controller.storage.s3.auth-secret-name` | K8s Secret with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` |
 
-See `/docs/operator/configuration.md` for the full configuration reference.
+See [Operator Configuration](../operator/configuration.md) for the full configuration reference.
 
 ## Related docs
 
-- `/docs/getting-started/quickstart.md` -- Install BubuStack and run your first example.
-- `/docs/operator/configuration.md` -- Operator configuration keys and defaults.
-- `/docs/overview/architecture.md` -- System architecture and module map.
+- [Quickstart](quickstart.md) — Step-by-step installation guide.
+- [Operator Configuration](../operator/configuration.md) — Operator configuration keys and defaults.
+- [Architecture](../overview/architecture.md) — System architecture and module map.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

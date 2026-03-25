@@ -1,3 +1,7 @@
+---
+title: Inputs, Schemas, and Defaults
+description: Input validation, defaulting precedence, and size constraints.
+---
 # Inputs, Schemas, and Defaults
 
 This document covers StoryRun inputs: schema validation, defaults, and precedence.
@@ -60,7 +64,7 @@ StoryRun inputs are subject to the inline size limit:
 
 - `storyrun.max-inline-inputs-size` (operator config)
 
-For larger payloads, use storage references (see `/docs/runtime/payloads.md`). The
+For larger payloads, use storage references (see [Payloads](payloads.md)). The
 platform does not auto-offload oversized StoryRun inputs; clients/SDKs must
 offload and pass storage refs.
 
