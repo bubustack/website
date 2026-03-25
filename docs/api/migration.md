@@ -1,3 +1,7 @@
+---
+title: CRD Migration Strategy
+description: API lifecycle stages, upgrade flows, and conversion webhook plans.
+---
 <!--
 Copyright 2025 BubuStack.
 
@@ -20,7 +24,7 @@ This document defines the API version lifecycle, the upgrade procedure between
 versions, and the planned introduction of conversion webhooks.
 
 For resource-level versioning (`spec.version` and pinning), see
-`/docs/api/versioning.md`.
+[Versioning](versioning.md).
 
 ## Who this is for
 

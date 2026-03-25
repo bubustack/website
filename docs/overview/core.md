@@ -1,3 +1,7 @@
+---
+title: Core System Overview
+description: Story, StoryRun, StepRun, Engram, and Impulse execution model.
+---
 # Core System Overview
 
 This document explains the core workflow model and execution flow in BubuStack,
@@ -6,7 +10,7 @@ and links to the detailed reference docs that define the contract.
 ## Who this is for
 
 - Workflow authors designing Stories and Steps.
-- Component authors building Engrams or Impulses.
+- Component authors building [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) or [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse).
 - Operators who need the resource map and execution flow.
 
 ## What you'll get
@@ -17,13 +21,46 @@ and links to the detailed reference docs that define the contract.
 
 ---
 
+## Unix philosophy
+
+BubuStack's resource model follows the Unix principle: **do one thing and do it
+well**, and **write programs to work together**.
+
+- An **Engram** is a program. It does one job — fetch HTTP, summarize text,
+  send a notification — and produces structured output. It has no knowledge of
+  the pipeline it participates in.
+- A **Story** is a pipeline. It composes Engrams into a directed acyclic graph,
+  wiring step outputs to step inputs through templates. Replace one Engram and
+  the rest of the pipeline is unaffected.
+- An **Impulse** is a trigger. It listens for external events — webhooks, cron
+  schedules, Kubernetes resource changes — and creates StoryRuns with mapped
+  inputs. It has no knowledge of the workflow it starts.
+- **Step outputs** are the universal interface. JSON flows between steps. There
+  is no proprietary IPC — just structured data evaluated through the template
+  engine (`{{ steps["fetch"].output.body }}`).
+- The **operator** ([bobrapet](https://github.com/bubustack/bobrapet)) is the
+  kernel. It schedules, reconciles, and enforces policy. It never owns business
+  logic or external side effects.
+- **Engrams and Impulses** are userspace. They own API calls, storage writes,
+  and data transformation. The [SDK](https://github.com/bubustack/bubu-sdk-go)
+  provides the contract between operator and component.
+
+This separation means every component is independently testable, replaceable,
+and reusable. Want Slack instead of Discord? Change the Engram ref, not the
+Story. Want Anthropic instead of OpenAI? Point the step at a different Engram.
+The pipeline doesn't care.
+
+---
+
 ## At a glance
 
-- Story defines the workflow spec: DAG, policies, schemas, and templates.
-- StoryRun is a concrete execution of a Story with resolved inputs and outputs.
-- StepRun is the execution record for a single step within a StoryRun.
-- Engram and EngramTemplate define executable components and their schemas.
-- Impulse and ImpulseTemplate define triggers that launch StoryRuns.
+- **Story** defines the workflow spec: DAG, policies, schemas, and templates.
+- **StoryRun** is a concrete execution of a Story with resolved inputs and outputs.
+- **StepRun** is the execution record for a single step within a StoryRun.
+- **Engram** and **EngramTemplate** define executable components and their schemas.
+- **Impulse** and **ImpulseTemplate** define triggers that launch StoryRuns from external events.
+
+See [CRD Design](../api/crd-design.md) for the full resource model and relationships.
 
 ---
 
@@ -43,11 +80,11 @@ and links to the detailed reference docs that define the contract.
 
 ## Execution flow (simplified)
 
-1. An Impulse receives an event and maps it to StoryRun inputs.
+1. An [Impulse](https://github.com/orgs/bubustack/repositories?q=impulse) receives an event and maps it to StoryRun inputs.
 2. The StoryRun controller resolves the Story and builds the DAG.
 3. StepRuns are created as steps become ready.
-4. If a template references offloaded data, a materialize StepRun is injected to hydrate and resolve it.
-5. StepRuns execute Engrams or primitives and publish outputs.
+4. If a template references offloaded data, the controller resolves it based on policy: in-process hydration from S3 (`controller`), pod-based materialization (`inject`), or rejection (`error`).
+5. StepRuns execute [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) or primitives and publish outputs.
 6. StoryRun aggregates step states and final output.
 
 ---
@@ -55,14 +92,14 @@ and links to the detailed reference docs that define the contract.
 ## Durable semantics
 
 Delivery guarantees, recovery rules, idempotency expectations, and signal semantics
-are defined in `/docs/overview/durable-semantics.md`.
+are defined in [Durable Semantics](durable-semantics.md).
 
 ---
 
 ## Component ecosystem
 
 SDK usage, contracts, registry patterns, and reliability semantics are summarized
-in `/docs/overview/component-ecosystem.md`.
+in [Component Ecosystem](component-ecosystem.md).
 
 ---
 
@@ -83,7 +120,7 @@ Failure handling and cleanup:
 - Cleanup blocks work for both batch and streaming stories. In streaming mode,
   cleanup steps execute as batch jobs after the streaming topology terminates.
 
-Details of primitive behavior are in `/docs/runtime/primitives.md`.
+Details of primitive behavior are in [Primitives](../runtime/primitives.md).
 
 ---
 
@@ -103,13 +140,16 @@ Evaluation behavior differs by field:
 | `spec.output` | Runtime at StoryRun finalize. | Runtime at StoryRun finalize (if applicable). |
 
 Streaming steps can select a transport declared in `spec.transports`.
-Expression rules and determinism are defined in `/docs/runtime/expressions.md`.
+Expression rules and determinism are defined in [Expressions](../runtime/expressions.md).
 
 Streaming notes:
-- The hub evaluates `if` per packet and routes to downstream Engram steps that depend on the upstream step.
+- The [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) hub evaluates `if` per packet and routes to downstream Engram steps that depend on the upstream step.
 - If a runtime `if` evaluates to false, that branch is skipped while other branches continue.
 - `executeStory` honors `waitForCompletion`; when true the hub waits for the child StoryRun to finish.
 - For steps with multiple `needs`, the hub performs a lightweight join when a correlation key is available (`bubu.join.key` or `message_id`).
+
+See [Streaming Contract](../streaming/streaming-contract.md) and
+[Transport Settings](../streaming/transport-settings.md) for transport configuration.
 
 ---
 
@@ -121,11 +161,11 @@ Stories define contracts:
 - `spec.output` templates the final output from `inputs` and `steps`.
 
 StoryRuns provide concrete inputs in `spec.inputs` and store final output in `status.output`.
-Defaults and validation behavior are specified in `/docs/runtime/inputs.md`.
+Defaults and validation behavior are specified in [Inputs](../runtime/inputs.md).
 
 Final output is capped (1 MiB). When exceeded, the StoryRun succeeds but the
 output is not stored in status (no automatic storage ref is written). See
-`/docs/runtime/payloads.md`.
+[Payloads](../runtime/payloads.md).
 
 ---
 
@@ -134,7 +174,7 @@ output is not stored in status (no automatic storage ref is written). See
 Template strings like `{{ inputs.foo }}` and raw template forms (`$bubuTemplate`) are
 used throughout Story fields. Use `{{ ... }}` for evaluation; plain strings are
 treated as literals. The engine is Go templates plus Sprig with custom helpers
-(see `/docs/runtime/expressions.md`). Deterministic inputs-only evaluation forbids `now`
+(see [Expressions](../runtime/expressions.md)). Deterministic inputs-only evaluation forbids `now`
 to preserve replayability.
 
 When a template references offloaded payloads, the platform either rejects the
@@ -169,26 +209,26 @@ and at different scopes:
 | Layer | What it retries | Who drives it | Configuration |
 | --- | --- | --- | --- |
 | **Job backoff** | Pod failures within a single Kubernetes Job. Kubelet restarts the pod container up to `backoffLimit` times. | Kubernetes Job controller | `JobPolicy.backoffLimit`, `JobWorkloadConfig.backoffLimit`, or operator default `job.backoff-limit`. `RestartPolicy` is set to `Never` (new pod per retry) or `OnFailure` (in-place restart). |
-| **Step retry** | Entire step execution (creates a new Job/pod). Triggered when a StepRun finishes with a retryable exit class and retries remain. | StepRun controller (`steprun_controller.go`) | `RetryPolicy.maxRetries`, `delay`, `maxDelay`, `backoff`, `jitter`. Template defaults via `TemplateRetryPolicy.recommendedMaxRetries`, `recommendedBaseDelay`, `recommendedMaxDelay`, `recommendedBackoff`. Operator default `retry.max-retries`. |
-| **Trigger delivery retry** | Submission of a trigger event to create a StoryRun. Retried by the SDK inside the Impulse workload. | SDK (runs inside Impulse pod) | `TriggerDeliveryPolicy.retry` (maxAttempts, baseDelay, maxDelay, backoff). Defaults from `ImpulseTemplate.spec.deliveryPolicy`, overridable on `Impulse.spec.deliveryPolicy`. |
+| **Step retry** | Entire step execution (creates a new Job/pod). Triggered when a StepRun finishes with a retryable exit class and retries remain. | StepRun controller | `RetryPolicy.maxRetries`, `delay`, `maxDelay`, `backoff`, `jitter`. Template defaults via `TemplateRetryPolicy.recommendedMaxRetries`, `recommendedBaseDelay`, `recommendedMaxDelay`, `recommendedBackoff`. Operator default `retry.max-retries`. |
+| **Trigger delivery retry** | Submission of a trigger event to create a StoryRun. Retried by the [SDK](https://github.com/bubustack/bubu-sdk-go) inside the Impulse workload. | SDK (runs inside Impulse pod) | `TriggerDeliveryPolicy.retry` (maxAttempts, baseDelay, maxDelay, backoff). Defaults from `ImpulseTemplate.spec.deliveryPolicy`, overridable on `Impulse.spec.deliveryPolicy`. |
 
 **Key distinction:** Job backoff and step retry both affect the same step but at
 different levels. A step with `backoffLimit: 3` and `maxRetries: 2` can produce
 up to `(3+1) * (2+1) = 12` pod attempts in the worst case (3 pod restarts per
-Job × 3 Jobs). Trigger delivery retry is entirely separate and concerns
+Job x 3 Jobs). Trigger delivery retry is entirely separate and concerns
 StoryRun creation, not step execution.
 
 Template-level fields (`TemplateJobPolicy`, `TemplateRetryPolicy`) provide
 recommended defaults prefixed with `recommended*`. These are merged into the
 runtime policy when the corresponding field is unset, not when it is explicitly
-set to zero. See `/docs/api/crd-design.md` for the full policy resolution chain.
+set to zero. See [CRD Design](../api/crd-design.md) for the full policy resolution chain.
 
 Impulse trigger delivery behavior is configured separately via
 `ImpulseTemplate.spec.deliveryPolicy` and `Impulse.spec.deliveryPolicy`. This
 policy controls trigger deduplication and delivery retries; it does not replace
 StepRun retry policies. Per-trigger throttling is configured on
-`Impulse.spec.throttle` and enforced by the SDK running inside the Impulse
-workload (templates do not provide throttle defaults).
+`Impulse.spec.throttle` and enforced by the [SDK](https://github.com/bubustack/bubu-sdk-go)
+running inside the Impulse workload (templates do not provide throttle defaults).
 
 `Impulse.spec.throttle` fields:
 - `ratePerSecond`: steady-state token bucket rate (0 disables rate limiting)
@@ -198,7 +238,7 @@ workload (templates do not provide throttle defaults).
 When throttling delays a trigger, the SDK patches `Impulse.status.throttledTriggers`
 and `Impulse.status.lastThrottled` so operators can observe backpressure.
 
-## Impulse Throttling Example
+### Impulse throttling example
 
 ```yaml
 apiVersion: bubustack.io/v1alpha1
@@ -216,14 +256,14 @@ spec:
     maxInFlight: 20
 ```
 
-Operator-level defaults and limits are documented in `/docs/operator/configuration.md`.
+Operator-level defaults and limits are documented in [Operator Configuration](../operator/configuration.md).
 
 ---
 
 ## Runtime objects and lifecycle
 
 StoryRun and StepRun phases, reasons, and terminal semantics are defined in
-`/docs/runtime/lifecycle.md`. `status.conditions` is the canonical lifecycle source of
+[Lifecycle](../runtime/lifecycle.md). `status.conditions` is the canonical lifecycle source of
 truth for both resources.
 
 ---
@@ -232,35 +272,37 @@ truth for both resources.
 
 Payloads can be stored inline or offloaded to storage. Storage references use
 `$bubuStorageRef` and related metadata fields. Size limits and reference
-behavior are defined in `/docs/runtime/payloads.md`. The controller does not auto-offload
+behavior are defined in [Payloads](../runtime/payloads.md). The controller does not auto-offload
 oversized Step inputs or StoryRun outputs; workflows must use storage refs and
 aggregation engrams when payloads grow.
 
 Design principle (DOTADIW: Do One Thing And Do It Well):
 The controller is responsible for workflow orchestration and reconciliation only.
-Engrams and Impulses own external side effects, storage writes, and storage
-lifecycle (retention/GC). The controller does not manage the lifecycle of
-storage objects produced by workloads.
+[Engrams](https://github.com/orgs/bubustack/repositories?q=engram) and
+[Impulses](https://github.com/orgs/bubustack/repositories?q=impulse) own
+external side effects, storage writes, and storage lifecycle (retention/GC).
+The controller does not manage the lifecycle of storage objects produced by
+workloads.
 
 ---
 
 ## Scoping and versioning
 
-Namespace scoping rules are defined in `/docs/api/scoping.md`. By default,
+Namespace scoping rules are defined in [Scoping](../api/scoping.md). By default,
 namespaced references must be within the same namespace. The operator config
 `references.cross-namespace-policy` can enable ReferenceGrant-based sharing or
 allow all cross-namespace references. Templates are cluster-scoped.
 
-Versioning and pinning are described in `/docs/api/versioning.md`. The CRD version
-lifecycle (`v1alpha1` → `v1beta1` → `v1`), upgrade procedures, and conversion
-webhook plan are in `/docs/api/migration.md`.
+Versioning and pinning are described in [Versioning](../api/versioning.md). The CRD version
+lifecycle (`v1alpha1` -> `v1beta1` -> `v1`), upgrade procedures, and conversion
+webhook plan are in [Migration](../api/migration.md).
 
 ---
 
 ## Operator configuration
 
 Controller configuration, scheduling controls, and defaults are documented in
-`/docs/operator/configuration.md`. The sample ConfigMap lives at
+[Operator Configuration](../operator/configuration.md). The sample ConfigMap lives at
 `config/manager/operator-config.yaml`.
 
 ---
@@ -269,14 +311,22 @@ Controller configuration, scheduling controls, and defaults are documented in
 
 | Area | Document | Focus |
 | --- | --- | --- |
-| Configuration | `/docs/operator/configuration.md` | Operator defaults, scheduling keys, and knobs |
-| Durable semantics | `/docs/overview/durable-semantics.md` | Delivery guarantees, recovery rules, idempotency expectations |
-| Step semantics | `/docs/runtime/primitives.md` | Primitive behavior and cleanup blocks |
-| Expressions | `/docs/runtime/expressions.md` | Contexts, determinism, and materialization |
-| Schemas | `/docs/runtime/inputs.md` | Defaults and validation rules |
-| Payloads | `/docs/runtime/payloads.md` | Inline vs storage refs and size limits |
-| Caching | `/docs/runtime/caching.md` | Output cache keys, modes, and TTLs |
-| Lifecycle | `/docs/runtime/lifecycle.md` | Phases, reasons, and terminal rules |
-| Scoping | `/docs/api/scoping.md` | Namespace boundaries and reference policy |
-| Versioning | `/docs/api/versioning.md` | Pinning behavior and compatibility |
-| CRD migration | `/docs/api/migration.md` | API version lifecycle and upgrade procedures |
+| Architecture | [Architecture](architecture.md) | Module map, dependency graph, runtime topology |
+| Configuration | [Operator Configuration](../operator/configuration.md) | Operator defaults, scheduling keys, and knobs |
+| Durable semantics | [Durable Semantics](durable-semantics.md) | Delivery guarantees, recovery rules, idempotency expectations |
+| Component ecosystem | [Component Ecosystem](component-ecosystem.md) | SDK usage, contracts, and component catalog |
+| Step semantics | [Primitives](../runtime/primitives.md) | Primitive behavior and cleanup blocks |
+| Expressions | [Expressions](../runtime/expressions.md) | Contexts, determinism, and materialization |
+| Schemas | [Inputs](../runtime/inputs.md) | Defaults and validation rules |
+| Payloads | [Payloads](../runtime/payloads.md) | Inline vs storage refs and size limits |
+| Caching | [Caching](../runtime/caching.md) | Output cache keys, modes, and TTLs |
+| Lifecycle | [Lifecycle](../runtime/lifecycle.md) | Phases, reasons, and terminal rules |
+| Streaming | [Streaming Contract](../streaming/streaming-contract.md) | Streaming message rules and data flow |
+| Transport | [Transport Settings](../streaming/transport-settings.md) | Backpressure, routing, and replay |
+| CRD design | [CRD Design](../api/crd-design.md) | Resource model, relationships, and policy chains |
+| Scoping | [Scoping](../api/scoping.md) | Namespace boundaries and reference policy |
+| Versioning | [Versioning](../api/versioning.md) | Pinning behavior and compatibility |
+| CRD migration | [Migration](../api/migration.md) | API version lifecycle and upgrade procedures |
+| SDK | [Go SDK](../sdk/go-sdk.md) | SDK entry points and usage patterns |
+| Building components | [Building Engrams](../sdk/building-engrams.md) | Step-by-step guide for Engrams and Impulses |
+| Roadmap | [Roadmap](../community/roadmap.md) | What's planned and where to contribute |

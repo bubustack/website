@@ -1,192 +1,168 @@
 ---
 title: Go SDK
 sidebar_position: 1
-description: Use the Bobrapet Go SDK to build Engrams that interact with Stories, StepRuns, and transport-aware control plane features.
+description: Build Engrams and Impulses with the BubuStack Go SDK.
 ---
 # Go SDK
 
-:::info Quick scan
-- **Why**: Build Engrams in Go with first-class access to Bubustack inputs, outputs, and transport connections.
-- **When**: Reach for the Go SDK when authoring Engrams that need production-grade telemetry and lifecycle management.
-- **How**: Import the runtime package, bind inputs, report outputs, and take advantage of helpers for transports and testing.
-:::
-
-The Bobrapet Go SDK gives Engram authors a batteries-included toolkit for interacting with the
-control plane. It handles configuration binding, status patching, telemetry, and transport-aware
-connections so you can focus on business logic.
+The Go SDK provides everything you need to build Engrams and Impulses that run
+inside BubuStack workflows. It handles configuration binding, gRPC transport,
+telemetry, and lifecycle management.
 
 ## Installation
 
 ```bash
-go get github.com/bubustack/bobrapet-go-sdk@latest
+go get github.com/bubustack/bubu-sdk-go@latest
 ```
 
-Import the runtime package in your Engram entrypoint:
+Supported Go versions: **1.22+** (minimum), **1.23+** (preferred). The module
+declares `toolchain go1.23.3`.
 
-```go
-import "github.com/bubustack/bobrapet-go-sdk/runtime"
-```
+## Entry Points
 
-## Runtime Entry Point
+The SDK provides three entry points depending on your workload type:
 
-Wrap your logic with `runtime.Run`. It wires context cancellation, structured logging, and panic
-recovery.
+| Function | Mode | Workload | Description |
+| --- | --- | --- | --- |
+| `sdk.StartBatch[C, I](ctx, engram)` | Batch | Job | Runs once, returns result + exit code |
+| `sdk.StartStreaming[C](ctx, engram)` | Streaming | Deployment | Long-lived gRPC server on port 50051 |
+| `sdk.RunImpulse[C](ctx, impulse)` | Trigger | Deployment | Listens for events, creates StoryRuns |
+
+## Batch Engrams
+
+Implement the `BatchEngram` interface:
 
 ```go title="main.go"
-runtime.Run(func(ctx context.Context, env *runtime.Environment) error {
-	var cfg Config
-	if err := env.BindInputs(&cfg); err != nil {
-		return err
-	}
+package main
 
-	result, err := doWork(ctx, cfg)
-	if err != nil {
-		return err
-	}
+import (
+    "context"
+    "github.com/bubustack/bubu-sdk-go/sdk"
+    "github.com/bubustack/bubu-sdk-go/engram"
+)
 
-	return env.ReportOutputs(result)
-})
-```
-
-- The context is canceled automatically if the StepRun is aborted or times out.
-- Any returned error sets the StepRun status to `Failed` with the message.
-
-## Working with Inputs
-
-The SDK supports binding the Story's `with` payload onto struct types:
-
-```go
 type Config struct {
-	ProjectID string   `json:"projectId"`
-	Files     []string `json:"files"`
+    Model string `json:"model"`
 }
 
-var cfg Config
-if err := env.BindInputs(&cfg); err != nil {
-	return err
+type Inputs struct {
+    Prompt string `json:"prompt"`
 }
-```
 
-You can also access raw JSON using `env.RawInputs()`.
+type MyEngram struct{}
 
-## Reporting Outputs
-
-Use `ReportOutputs` to attach structured data to the StepRun:
-
-```go
-if err := env.ReportOutputs(map[string]any{
-	"status":   "ok",
-	"duration": time.Since(start).Milliseconds(),
-}); err != nil {
-	return err
+func (e *MyEngram) Init(ctx context.Context, config Config, secrets *engram.Secrets) error {
+    return nil
 }
-```
 
-Outputs become available to downstream steps via `steps.<name>.outputs`.
+func (e *MyEngram) Process(ctx context.Context, execCtx *engram.ExecutionContext, inputs Inputs) (*engram.Result, error) {
+    return &engram.Result{
+        Output: map[string]any{"status": "ok"},
+    }, nil
+}
 
-### Custom Status Conditions
-
-Report fine-grained status updates without finishing the step:
-
-```go
-env.SetCondition(runtime.Condition{
-	Type:    "DownloadingDataset",
-	Status:  runtime.ConditionTrue,
-	Message: "Fetched 120MB",
-})
-```
-
-Conditions show up under `status.conditions` on the StepRun resource.
-
-## Artifacts and Logs
-
-- `env.ReportArtifact(name, io.Reader)` uploads artifacts (e.g., JSON results) to the configured blob
-  store.
-- `env.Logger()` returns a structured logger with Story and Step context baked in.
-
-```go
-env.Logger().Infow("chunk processed", "chunk", idx, "size", size)
-```
-
-Log records include `storyRun`, `step`, and correlation IDs automatically.
-
-## Transport Targets
-
-For real-time meshes, Engrams running in `deployment` or `statefulset` mode receive transport
-connection info:
-
-```go
-peers := env.Targets()
-for _, target := range peers {
-	conn, err := env.TransportConn(ctx, target)
-	if err != nil {
-		return err
-	}
-	client := pb.NewProcessorClient(conn)
-	resp, err := client.Handle(ctx, payload)
-	_ = resp
+func main() {
+    sdk.StartBatch[Config, Inputs](context.Background(), &MyEngram{})
 }
 ```
 
-The SDK manages connection pooling, retries, and TLS settings for Bobravoz gRPC today, and will
-abstract future transports as they are contributed.
+## Streaming Engrams
 
-### Streaming Context & Deadlines
+Implement the `StreamingEngram` interface for long-lived message processing:
 
-Streaming Engrams no longer carry an implicit 30-second RPC deadline. The SDK constructs per-stream
-contexts via `makeRPCContext`, which now defaults to `context.WithCancel` so long-lived connections
-stay open indefinitely. If you need guard rails, set `BUBU_GRPC_STREAM_TIMEOUT` or
-`BUBU_HUB_PER_MESSAGE_TIMEOUT` to a valid duration string (`5m`, `30s`, etc.) and the SDK will honor
-the tighter deadline. A regression test asserts that the default context survives at least five
-minutes without cancellation, so upgrades that reintroduce short deadlines will fail CI.
+```go title="main.go"
+type MyStream struct{}
 
-## Handling Secrets
+func (s *MyStream) Init(ctx context.Context, config Config, secrets *engram.Secrets) error {
+    return nil
+}
 
-The controller injects mounted secrets and config maps according to the Engram spec. Use the helper
-to map them to files:
+func (s *MyStream) Stream(ctx context.Context, in <-chan engram.StreamMessage, out chan<- engram.StreamMessage) error {
+    for msg := range in {
+        out <- engram.StreamMessage{Payload: msg.Payload}
+    }
+    return nil
+}
 
-```go
-path := env.SecretPath("openai-api")
-key, err := os.ReadFile(filepath.Join(path, "api_key"))
+func main() {
+    sdk.StartStreaming[Config](context.Background(), &MyStream{})
+}
 ```
 
-## Testing Engrams
+## Impulses (Triggers)
 
-Use the `testruntime` package to simulate the environment without Kubernetes:
+Impulses listen for external events and create StoryRuns:
 
 ```go
-import "github.com/bubustack/bobrapet-go-sdk/testruntime"
+type MyImpulse struct{}
 
-func TestEngram(t *testing.T) {
-	tester := testruntime.New(testruntime.WithInputs(map[string]any{
-		"projectId": "alpha",
-	}))
-	err := runtime.RunWith(tester, handler)
-	require.NoError(t, err)
-	assert.Equal(t, "alpha", tester.Output("projectId"))
+func (i *MyImpulse) Init(ctx context.Context, config Config, secrets *engram.Secrets) error {
+    return nil
 }
+
+func (i *MyImpulse) Run(ctx context.Context, client *k8s.Client) error {
+    return sdk.StartStory(ctx, "my-story", map[string]any{"key": "value"})
+}
+
+func main() {
+    sdk.RunImpulse[Config](context.Background(), &MyImpulse{})
+}
+```
+
+## Secrets
+
+```go
+key, ok := secrets.Get("openai-api-key")
+all := secrets.GetAll()                    // Values redacted in logs
+raw := secrets.Raw()                       // Unredacted — use carefully
+```
+
+## Helper Functions
+
+```go
+sdk.StartStory(ctx, storyName, inputs)                 // Trigger a StoryRun
+sdk.StartStoryWithToken(ctx, storyName, token, inputs)  // Idempotent trigger
+sdk.StopStory(ctx, storyRunName)                        // Cancel a StoryRun
+sdk.EmitSignal(ctx, key, payload)                       // Progress signal (max 8 KiB)
+sdk.RecordEffect(ctx, key, payload)                     // Track side effects
+sdk.ExecuteEffectOnce(ctx, key, fn)                     // Dedupe side effects
+```
+
+## Testing
+
+Use the testkit for local testing without Kubernetes:
+
+```go
+import "github.com/bubustack/bubu-sdk-go/testkit"
+
+// Batch
+h := testkit.BatchHarness[Config, Inputs]{
+    Engram:  &MyEngram{},
+    Config:  Config{Model: "gpt-4"},
+    Inputs:  Inputs{Prompt: "hello"},
+    Secrets: map[string]string{"api-key": "test"},
+}
+result, err := h.Run(context.Background())
+
+// Streaming
+sh := testkit.StreamHarness[Config]{
+    Engram: &MyStream{},
+    Config: Config{},
+    Inputs: []engram.StreamMessage{{Payload: []byte("test")}},
+}
+outputs, err := sh.Run(context.Background())
 ```
 
 ## Version Compatibility
 
-- The SDK follows semantic versioning. Minor releases are backward compatible.
-- Supported Go versions: 1.22.x (minimum) and 1.23.x (preferred). The module declares `toolchain go1.23.3`, and CI exercises both minor streams. Older toolchains are not validated.
-- SDK minor versions track the bobrapet operator minor stream. When you upgrade the operator, plan to consume the matching SDK minor within the same release train.
-- Major releases may adjust the ABI; upgrade Stories and Engram templates accordingly.
-
-:::note Community board
-Python, TypeScript, and other SDK ideas adopt the same ABI contract. Track requests and volunteer to
-help in the [community backlog](../community/roadmap.md) to influence prioritisation.
-:::
-
-## Additional Resources
-
-- Browse sample Engrams in the [GitHub organization](https://github.com/bubustack).
-- Read the [Engram Authoring Guide](../engrams/authoring.md) for an end-to-end tutorial.
-- File issues or feature requests in the [`bobrapet` repository](https://github.com/bubustack/bobrapet/issues).
+- SDK minor versions track the bobrapet operator minor stream.
+- Upgrade the SDK when you upgrade the operator.
+- Major releases may adjust the ABI.
 
 ## Next steps
 
-- Follow the [Engram Authoring Guide](../engrams/authoring.md) to publish your implementation.
-- Review [Runtime configuration](/docs/reference/config) to understand injected environment variables.
-- Join the SDK working group via [Community get-involved](../community/get-involved.md#working-groups).
+- Follow the [Building Engrams](building-engrams.md) guide to publish your Engram.
+- Browse sample Engrams in the [GitHub organization](https://github.com/bubustack).
+- Browse [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) and [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse) on GitHub.
+- File issues in the [`bubu-sdk-go` repository](https://github.com/bubustack/bubu-sdk-go/issues).
+- See the [Roadmap](../community/roadmap.md) for planned SDK features (Python, TypeScript).

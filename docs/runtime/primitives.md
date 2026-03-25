@@ -1,3 +1,7 @@
+---
+title: Workflow Primitives
+description: Primitive step semantics and batch/streaming support matrix.
+---
 # Workflow Primitives
 
 This document describes the built-in workflow primitives, with special focus on the batch-only `gate` and `wait` steps.
@@ -13,11 +17,11 @@ This document describes the built-in workflow primitives, with special focus on 
 - When batch-only primitives are available.
 - Cleanup and failure behavior for primitive steps.
 
-For expression syntax and evaluation rules, see `/docs/runtime/expressions.md`.
-For input schema/defaults and payload contracts, see `/docs/runtime/inputs.md` and `/docs/runtime/payloads.md`.
-For lifecycle/state semantics, see `/docs/runtime/lifecycle.md`.
-For versioning and pinning, see `/docs/api/versioning.md`.
-For namespace scoping rules, see `/docs/api/scoping.md`.
+For expression syntax and evaluation rules, see [Expressions](expressions.md).
+For input schema/defaults and payload contracts, see [Inputs](inputs.md) and [Payloads](payloads.md).
+For lifecycle/state semantics, see [Lifecycle](lifecycle.md).
+For versioning and pinning, see [Versioning](../api/versioning.md).
+For namespace scoping rules, see [Scoping](../api/scoping.md).
 
 ## Supported primitives
 

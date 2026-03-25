@@ -1,3 +1,7 @@
+---
+title: Observability and Debugging
+description: Tracing, metrics, logs, and troubleshooting workflows for BubuStack.
+---
 # Observability and Debugging
 
 This guide explains how BubuStack exposes traces, metrics, logs, and run
@@ -165,3 +169,17 @@ correlation ID and labels.
 - Avoid logging secrets in step output unless strictly required.
 - Prefer redaction and offloading for sensitive payloads.
 - Use dedicated service accounts with least privilege.
+
+## Incident runbook
+
+Use the [Observability Runbook](runbook.md) for symptom-first production troubleshooting.
+
+---
+
+## Related docs
+
+- [Lifecycle](../runtime/lifecycle.md) — StoryRun/StepRun phases and terminal semantics.
+- [Error Contract](../api/errors.md) — Structured error format and exit codes.
+- [Operator Configuration](../operator/configuration.md) — Operator settings and defaults.
+- [Quickstart](../getting-started/quickstart.md) — Get running in under 10 minutes.
+- [Roadmap](../community/roadmap.md) — What's planned and where to contribute.

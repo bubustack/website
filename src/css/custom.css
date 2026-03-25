@@ -266,3 +266,11 @@
 .bubu-ecosystem-toggle--compact strong {
   font-size: 0.95rem;
 }
+
+.footer .footer__copyright {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  padding: 0.55rem 0.9rem;
+  background: rgba(0, 0, 0, 0.32);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}

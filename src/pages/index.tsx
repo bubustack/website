@@ -1,4 +1,5 @@
 import type {ReactNode} from 'react';
+import {useEffect, useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -14,9 +15,24 @@ import styles from './index.module.css';
 import {useColorMode} from '@docusaurus/theme-common';
 
 function HomepageHeader() {
-  const {siteConfig} = useDocusaurusContext();
   const {colorMode} = useColorMode();
   const isDark = colorMode === 'dark';
+  const [enableMotion, setEnableMotion] = useState(true);
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const recalc = () => {
+      setEnableMotion(!(media.matches || window.innerWidth < 900));
+    };
+    recalc();
+    media.addEventListener('change', recalc);
+    window.addEventListener('resize', recalc);
+    return () => {
+      media.removeEventListener('change', recalc);
+      window.removeEventListener('resize', recalc);
+    };
+  }, []);
+
   const hyperspeedColors = isDark
     ? {
         roadColor: 0x080808,
@@ -41,47 +57,51 @@ function HomepageHeader() {
   return (
     <div className={styles.heroWrapper}>
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
-        <Hyperspeed
-          effectOptions={{
-            onSpeedUp: () => { },
-            onSlowDown: () => { },
-            distortion: 'turbulentDistortion',
-            length: 400,
-            roadWidth: 10,
-            islandWidth: 2,
-            lanesPerRoad: 4,
-            fov: 90,
-            fovSpeedUp: 150,
-            speedUp: 2,
-            carLightsFade: 0.4,
-            totalSideLightSticks: 20,
-            lightPairsPerRoadWay: 40,
-            shoulderLinesWidthPercentage: 0.05,
-            brokenLinesWidthPercentage: 0.1,
-            brokenLinesLengthPercentage: 0.5,
-            lightStickWidth: [0.12, 0.5],
-            lightStickHeight: [1.3, 1.7],
-            movingAwaySpeed: [60, 80],
-            movingCloserSpeed: [-120, -160],
-            carLightsLength: [400 * 0.03, 400 * 0.2],
-            carLightsRadius: [0.05, 0.14],
-            carWidthPercentage: [0.3, 0.5],
-            carShiftX: [-0.8, 0.8],
-            carFloorSeparation: [0, 5],
-            colors: hyperspeedColors,
-          }}
-        />
+        {enableMotion ? (
+          <Hyperspeed
+            effectOptions={{
+              onSpeedUp: () => { },
+              onSlowDown: () => { },
+              distortion: 'turbulentDistortion',
+              length: 400,
+              roadWidth: 10,
+              islandWidth: 2,
+              lanesPerRoad: 4,
+              fov: 90,
+              fovSpeedUp: 150,
+              speedUp: 2,
+              carLightsFade: 0.4,
+              totalSideLightSticks: 20,
+              lightPairsPerRoadWay: 40,
+              shoulderLinesWidthPercentage: 0.05,
+              brokenLinesWidthPercentage: 0.1,
+              brokenLinesLengthPercentage: 0.5,
+              lightStickWidth: [0.12, 0.5],
+              lightStickHeight: [1.3, 1.7],
+              movingAwaySpeed: [60, 80],
+              movingCloserSpeed: [-120, -160],
+              carLightsLength: [400 * 0.03, 400 * 0.2],
+              carLightsRadius: [0.05, 0.14],
+              carWidthPercentage: [0.3, 0.5],
+              carShiftX: [-0.8, 0.8],
+              carFloorSeparation: [0, 5],
+              colors: hyperspeedColors,
+            }}
+          />
+        ) : (
+          <div className={styles.heroStaticBackdrop} aria-hidden="true" />
+        )}
         <div className={clsx('container', styles.heroContent)}>
           <Heading as="h1" className={clsx('hero__title', styles.heroTitle)}>
-            Build, Deploy, and Scale Production-Grade AI Workflows on Kubernetes.
+            Workflows that compose like Unix pipes.
           </Heading>
           <p className={clsx('hero__subtitle', styles.heroSubtitle)}>
-            Bubustack is the open-source, cloud-native toolkit for AI engineers who build and operate complex, mission-critical workflows with confidence.
+            Kubernetes-native. GitOps-driven. Build AI pipelines, automation, and real-time workflows — every component does one thing well.
           </p>
           <div className={styles.heroButtons}>
             <Link
               className={clsx('button button--lg', styles.ctaButton)}
-              to="/docs/operator/quickstart">
+              to="/docs/getting-started/quickstart">
               Get Started
             </Link>
             <Link
@@ -100,8 +120,8 @@ export default function Home(): ReactNode {
   const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
-      title="Cloud-Native AI Orchestration Platform"
-      description="Bubustack is the open-source, cloud-native toolkit for AI engineers who build and operate complex, mission-critical workflows with confidence.">
+      title="Composable Workflows on Kubernetes"
+      description="BubuStack is an open-source, cloud-native toolkit for engineers who build and operate production-grade workflows — AI pipelines, automation, real-time streaming. Every piece is composable, replaceable, and managed through Git.">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
@@ -111,24 +131,22 @@ export default function Home(): ReactNode {
         <CommunitySpotlight />
         <section className="container margin-vert--xl">
           <div className="text--center">
-            <Heading as="h2">From Visual Builder to Git-Native Workflow</Heading>
+            <Heading as="h2">Declarative AI Workflows on Kubernetes</Heading>
             <p>
-            With Bubustack, you can visually design complex AI workflows and then manage them as code.
-            Use our pre-built templates and CEL-powered connectors to get started quickly.
-            Every change is versioned, reviewed, and deployed through standard Git workflows,
-            giving you the speed of a visual builder with the reliability of infrastructure-as-code.
-            If you need a new integration, you can easily build one and share it with the community.
+            Define workflows as CRDs, deploy with your GitOps controller, observe with OpenTelemetry.
+            Every change is versioned, reviewed, and deployed through standard Git workflows.
+            Build new Engrams and Impulses, share them through GitHub today, and track registry work on the roadmap.
             </p>
             <div className={styles.heroButtons}>
               <Link
                 className={clsx('button button--lg', styles.ctaButton)}
-                to="/docs/operator/quickstart">
-                Explore the Docs
+                to="/docs/getting-started/quickstart">
+                Get Started
               </Link>
               <Link
                 className={clsx('button button--lg', styles.secondaryButton)}
-                to="/docs/community/get-involved">
-                Join the Community
+                to="/docs/community/roadmap">
+                View the Roadmap
               </Link>
             </div>
           </div>

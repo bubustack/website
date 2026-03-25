@@ -1,65 +1,112 @@
 ---
-title: Community Backlog
-sidebar_position: 4
-description: Bubustack’s priorities are set by the community—here’s how to read the backlog and influence what ships next.
+title: Roadmap
+sidebar_position: 2
+description: What BubuStack can do today, what's missing, and where we're headed. Help us build it faster.
 ---
+# Roadmap
 
-# Community Backlog
+BubuStack is a working platform. You can deploy it today. But we're honest
+about the gaps — and transparent about what comes next.
 
-:::info Quick scan
-- **Why**: Understand how Bubustack tracks feature requests and determines what to build next.
-- **When**: Review before proposing a new transport, SDK, or Engram initiative.
-- **How**: Use the shared boards, working groups, and contribution pathways outlined below.
-:::
+**Want these features sooner? Join the team.** Early contributors shape the
+project. We use an open contributor ladder: Contributor → Reviewer → Maintainer.
+Ship code, get recognized, grow your role. See [Get Involved](get-involved.md).
 
-Bubustack does not publish fixed timelines for future transports or SDKs. Instead, the community
-maintains an open backlog that reflects real-world demand and contributor capacity. When enough
-teams commit to helping—or a maintainer volunteers to lead—an item graduates from “idea” to “in
-progress” and eventually to a tagged release.
+## What works today
 
-## Cadence at a Glance
+- **Batch workflows** — DAG-based Stories with steps, conditions, parallel execution, gates, and waits.
+- **Streaming workflows** — Long-lived topologies with Bobravoz gRPC transport, backpressure, flow control.
+- **Reusable components** — Growing catalog of [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) and [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse) with versioned templates.
+- **GitOps-native** — Every resource is a CRD. Deploy with Flux, Argo CD, or plain kubectl.
+- **Observability** — OpenTelemetry tracing, structured errors, step-level metrics.
+- **Go SDK** — Build Engrams and Impulses with testkit, conformance suites, and secrets management.
+- **Storage offloading** — S3-compatible backends for large payloads.
+- **Security** — RBAC, pod security defaults, cross-namespace policies, webhook validation.
 
-| Rhythm | Scope | Notes |
+## Known gaps
+
+These are real limitations. They affect what you can build today.
+
+| Gap | Impact | Workaround |
 | --- | --- | --- |
-| Monthly releases | Bobrapet, Bobravoz, catalog templates | Tagged in Git with upgrade PRs and release notes. |
-| Quarterly backlog review | All working groups | RFC thread two weeks prior; outcomes recorded in Discussions. |
-| Beta programmes | Transports, SDKs, Engrams | Opt-in. Announced via working group updates and Discussions. |
+| **No feedback loops / cycles** | Can't do "retry with LLM feedback until quality > 0.8". DAG-only by design. | Chain `executeStory` with conditions |
+| **No durable execution** | Pod dies mid-workflow, no automatic replay from checkpoint. | External state store + step retries |
+| **No mutable shared state** | Steps communicate only through immutable DAG edges. No shared KV store. | Pass state through step outputs |
+| **No mid-execution event injection** | Can't inject events into running workflows (except gate/wait primitives). | Gate primitives for simple cases |
+| **No mixed batch+streaming** | A Story is either batch OR streaming. Not both. | Separate Stories with Impulse chaining |
 
-## Where to Track Work
+### Addressable gaps (contributors welcome)
 
-- **GitHub Discussions boards** — Each working group keeps a pinned board (e.g. `operator-guild`,
-  `transport-roadmap`, `sdk`) listing ideas, active work, and needs-help items.
-- **Project boards** — The Engram catalog, SDK collective, and transport council maintain GitHub
-  Projects to visualise TODO → Doing → Done.
-- **Community calls** — Meeting notes capture decisions, status changes, and new volunteers. Catch
-  up asynchronously if you can’t attend live.
+| Gap | Impact | Workaround today |
+| --- | --- | --- |
+| Dynamic step spawning at runtime | High for AI agents | `map-reduce-adapter` Engram |
+| Custom template functions | Medium | Modify `core/templating/funcs.go` |
+| Plugin/extension hooks on controller | Medium | Fork bobrapet |
+| State recovery across StoryRun retries | Medium | External state store |
+| Pub/sub between workflows | Medium | External event bus |
 
-## How Prioritisation Happens
+## Help us improve
 
-1. **Idea logged** — Someone opens an issue or Discussion describing the need.
-2. **Signal gathered** — Maintainers ask for customer + contributor commitments (e.g. “happy to help
-   test”, “can fund engineering time”).
-3. **Owner confirmed** — A maintainer, partner, or contributor agrees to drive the work.
-4. **Status updated** — The board moves the card to “Planned” or “In progress”, and the community
-   knows what to expect.
+We welcome folks who will improve the ecosystem quality, docs, codebase,
+coverage, architecture, API design — or just share ideas and be active community
+members.
 
-If no owner appears, the item simply stays on the board—no promises, no hidden timelines.
+**Concrete areas where we need help:**
 
-## Requesting a Feature
+- **Test the platform** — Deploy it, break it, [open issues](https://github.com/bubustack/bobrapet/issues). Bug reports are contributions. Every issue helps us improve.
+- **Improve documentation** — Fix gaps, add examples, clarify confusing sections. Good docs lower the barrier for everyone.
+- **Component registry and CLI** — `bubu-registry` and the `bubu` CLI for scaffolding, publishing, and discovering components. Not built yet.
+- **New testkit development** — Improve harnesses, add assertion helpers, expand conformance suites.
+- **New storage backends** — GCS, Azure Blob, and beyond. The S3 interface is the current boundary.
+- **New SDKs** — Python SDK, TypeScript SDK. Same ABI contract as the Go SDK.
+- **New transport operators** — Community-contributed transport adapters beyond Bobravoz gRPC.
+- **New Engrams and Impulses** — Expand the [catalog](https://github.com/orgs/bubustack/repositories?q=engram). Every new component makes the platform more useful.
 
-1. Search existing Discussions/issues to avoid duplicates.
-2. If it’s new, create a Discussion with context (problem, desired behaviour, impact).
-3. Share the ask in the relevant working group call or async thread.
-4. Offer help: testing, docs, or engineering cycles drastically increase the chance it ships.
+## Release & activity signals
 
-## Contributing to an Existing Item
+Track project activity from these source-of-truth pages:
 
-- Comment on the card with what you can provide (code, docs, budget, design review).
-- Sync with the maintainer or working group to divide tasks.
-- Submit PRs referencing the Discussion/issue so progress stays visible.
+- [BubuStack organization repositories](https://github.com/orgs/bubustack/repositories)
+- [Examples releases](https://github.com/bubustack/examples/releases)
+- [Bobrapet releases](https://github.com/bubustack/bobrapet/releases)
+- [Go SDK releases](https://github.com/bubustack/bubu-sdk-go/releases)
 
-## Next steps
+## Vision
 
-- Browse the [Contribution Guide](contributing.md) for coding standards and proposal workflow.
-- Join a [working group](get-involved.md#working-groups) aligned with your interests.
-- Share backlog feedback or volunteer for items directly in the [Discussions board](https://github.com/bubustack/bobrapet/discussions).
+Where we want to take BubuStack, roughly in priority order.
+
+### Near-term
+
+- **Loop primitive** — Bounded iteration with exit conditions. Implemented as
+  recursive `executeStory` under the hood. Doesn't violate DAG model.
+- **Workflow checkpointing** — Durable execution semantics with automatic
+  recovery from last checkpoint.
+- **Interactive tutorial** — Time-to-first-workflow under 5 minutes.
+- **Expand bubu-registry** — More Engrams, Impulses, and community templates.
+
+### Medium-term
+
+- **Native A2A protocol support** — Agent-to-agent negotiation as first-class
+  CRDs (`AgentBinding`, `AgentTransport`). MCP was donated to the Linux
+  Foundation in December 2025 ([Linux Foundation announcement](https://www.linuxfoundation.org/press/linux-foundation-announces-the-formation-of-the-agentic-ai-foundation))
+  — being the first K8s-native platform with A2A/MCP CRDs is a significant differentiator.
+- **MCP gateway** — First-class BubuStack component for Model Context Protocol.
+- **Python SDK** — Same ABI contract as Go SDK.
+
+### Long-term
+
+- **Multi-cluster federation** — Global workflows across regions.
+- **Compliance primitives** — Audit trail CRDs, cost attribution, EU AI Act
+  traceability.
+- **Mixed batch+streaming Stories** — Single Story with both patterns.
+
+## How to pick up work
+
+1. Browse [open issues](https://github.com/bubustack/bobrapet/issues) tagged
+   `good first issue` or `help wanted`.
+2. Comment on a roadmap item in
+   [GitHub Discussions](https://github.com/bubustack/bobrapet/discussions) to
+   coordinate.
+3. For large features, open a design discussion before writing code.
+4. See [Get Involved](get-involved.md) for contribution guidelines and the
+   contributor ladder.

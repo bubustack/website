@@ -1,3 +1,7 @@
+---
+title: Output Caching
+description: Cache policy fields, key material, and storage behavior.
+---
 # Output Caching
 
 BubuStack can reuse Step outputs based on a deterministic cache key. Caching is opt-in

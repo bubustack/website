@@ -1,3 +1,7 @@
+---
+title: Durable Semantics
+description: Delivery guarantees, retry boundaries, and idempotency expectations.
+---
 # Durable Semantics
 
 This document defines the current durability guarantees and limits in BubuStack.
@@ -7,7 +11,7 @@ It is a contract for operators, SDK users, and workflow authors.
 
 - Operators who need to understand durability and recovery guarantees.
 - Workflow authors who care about retries and idempotency.
-- SDK/component authors implementing correct behavior on failures.
+- [SDK](https://github.com/bubustack/bubu-sdk-go)/component authors implementing correct behavior on failures.
 
 ## What you'll get
 
@@ -21,16 +25,16 @@ It is a contract for operators, SDK users, and workflow authors.
 
 - StoryRun creation is at-least-once by default. If the same external trigger is
   retried without an idempotency token, multiple StoryRuns may be created.
-- When a trigger token is provided via the SDK, the SDK derives a deterministic
+- When a trigger token is provided via the [SDK](https://github.com/bubustack/bubu-sdk-go), the SDK derives a deterministic
   StoryRun name and treats `AlreadyExists` as idempotent when inputs match.
 - Trigger tokens must only be reused with identical inputs; mismatches are rejected.
-- Impulses can configure delivery behavior (dedupe + retry schedule) via
-  `spec.deliveryPolicy`. The SDK enforces this when BUBU trigger policy
-  environment variables are present.
+- [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse) can
+  configure delivery behavior (dedupe + retry schedule) via `spec.deliveryPolicy`.
+  The SDK enforces this when BUBU trigger policy environment variables are present.
 - Impulses can throttle trigger submission via `spec.throttle`. The SDK enforces
   per-pod rate and concurrency limits and records throttled events in
   `Impulse.status.throttledTriggers` and `Impulse.status.lastThrottled`.
-- StepRun creation is idempotent for Engram-backed steps because controllers derive
+- StepRun creation is idempotent for [Engram](https://github.com/orgs/bubustack/repositories?q=engram)-backed steps because controllers derive
   deterministic StepRun names from StoryRun name and step name.
 - Step execution is at-least-once. A StepRun may execute multiple times because
   retries and job recreation can re-run the same step.
@@ -53,10 +57,11 @@ keys and ledgering as described later in this document.
 - **Signals**
   - **Best-effort** delivery. No ordering or replay guarantee unless signal
     sequences are used and persisted in the StepRun status.
-- **Streaming transport**
+- **Streaming transport** ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc))
   - **Best-effort by default**. When `delivery.semantics=at_least_once` and replay
     is enabled, the hub provides at-least-once delivery with replay on reconnect.
     In-memory buffers can still drop messages on overflow in best-effort modes.
+    See [Transport Settings](../streaming/transport-settings.md).
 
 ---
 
@@ -75,9 +80,10 @@ keys and ledgering as described later in this document.
 
 ## Trigger delivery policy
 
-Impulse delivery policy controls how triggers dedupe and retry StoryRun creation.
-It is configured on `ImpulseTemplate.spec.deliveryPolicy` and can be overridden
-per `Impulse.spec.deliveryPolicy`.
+[Impulse](https://github.com/orgs/bubustack/repositories?q=impulse) delivery
+policy controls how triggers dedupe and retry StoryRun creation. It is configured
+on `ImpulseTemplate.spec.deliveryPolicy` and can be overridden per
+`Impulse.spec.deliveryPolicy`.
 
 Dedupe modes:
 - `none`: no deduplication; repeated triggers may create multiple StoryRuns.
@@ -104,8 +110,8 @@ When a trigger token is set, the StoryRun must include a trigger input hash
 annotation (`storyrun.bubustack.io/trigger-input-hash`) that matches the inputs.
 The SDK sets this automatically; non-SDK clients must compute and supply it.
 
-Custom clients that do not use the SDK must implement the same behavior to
-respect the policy.
+Custom clients that do not use the [SDK](https://github.com/bubustack/bubu-sdk-go)
+must implement the same behavior to respect the policy.
 
 ---
 
@@ -152,6 +158,9 @@ Recommended pattern:
 
 ## SDK usage patterns
 
+The following examples use [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go).
+See [Go SDK](../sdk/go-sdk.md) for the full API reference.
+
 Example: idempotent StoryRun creation with a trigger token.
 
 ```go
@@ -177,7 +186,7 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
 
 ## Recovery rules (current)
 
-- On controller restart, StoryRun reconciliation rehydrates StepState from existing
+- On [bobrapet](https://github.com/bubustack/bobrapet) controller restart, StoryRun reconciliation rehydrates StepState from existing
   StepRuns and merges terminal phases without clobbering completed steps.
 - StepRun reconciliation reattaches to the Job by name when it exists.
 - If a Job is missing while a StepRun is still non-terminal, a new Job is created
@@ -209,7 +218,7 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
   pauses execution until the deadline is reached.
 - Timer precision is bounded by reconcile cadence and controller requeue delays.
 - Cron/schedules are implemented as an external impulse (see
-  the `cron-impulse` component in the engrams repository for implementation details).
+  [cron-impulse](https://github.com/bubustack/cron-impulse) for implementation details).
 
 ---
 
@@ -240,7 +249,7 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
   events after a given sequence number.
 - Ordering is by `signalEvents[].seq` when available. The `status.signals` map is
   last-writer-wins and is intended for “latest value” lookups.
-- Streaming transport buffers are in-memory and can drop messages on overflow.
+- Streaming transport buffers ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc)) are in-memory and can drop messages on overflow.
 - Kubernetes Events are used for operational diagnostics (e.g., retries, restarts,
   blocked templates) and should not be treated as a durable signal channel.
 
@@ -254,7 +263,7 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
   detect already-applied side effects.
 - Prefer transactional outbox patterns or external systems that provide exactly-once
   guarantees when needed.
-- SDK helper for effect dedupe:
+- [SDK](https://github.com/bubustack/bubu-sdk-go) helper for effect dedupe:
 
 ```go
 result, already, err := sdk.ExecuteEffectOnce(ctx, key, func(ctx context.Context) (any, error) {
@@ -271,7 +280,16 @@ _ = result
 
 ## Related references
 
-- `/docs/overview/core.md` for core resources and execution flow.
-- `/docs/runtime/primitives.md` for step semantics and gate/wait behavior.
-- `/docs/runtime/lifecycle.md` for phase and terminal rules.
-- `/docs/runtime/inputs.md` and `/docs/runtime/payloads.md` for size limits and storage refs.
+- [Core](core.md) — Core resources and execution flow.
+- [Architecture](architecture.md) — Module map and dependency graph.
+- [Component Ecosystem](component-ecosystem.md) — SDK usage, contracts, and component catalog.
+- [Primitives](../runtime/primitives.md) — Step semantics and gate/wait behavior.
+- [Lifecycle](../runtime/lifecycle.md) — Phase and terminal rules.
+- [Inputs](../runtime/inputs.md) and [Payloads](../runtime/payloads.md) — Size limits and storage refs.
+- [CRD Design](../api/crd-design.md) — Resource model and policy resolution chains.
+- [Error Contract](../api/errors.md) — Structured error contract for StepRuns.
+- [Go SDK](../sdk/go-sdk.md) — SDK entry points and usage patterns.
+- [Streaming Contract](../streaming/streaming-contract.md) — Streaming message rules.
+- [Transport Settings](../streaming/transport-settings.md) — Backpressure, routing, replay, and delivery semantics.
+- [Operator Configuration](../operator/configuration.md) — Controller defaults and scheduling keys.
+- [Roadmap](../community/roadmap.md) — Durable execution and checkpointing are on the roadmap.

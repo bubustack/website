@@ -3,65 +3,37 @@ import Link from '@docusaurus/Link';
 import clsx from 'clsx';
 import styles from './styles.module.css';
 
-type Highlight = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  items: string[];
-  cta: {
-    label: string;
-    to: string;
-    external?: boolean;
-  };
-};
+const roadmapNow = [
+  'No feedback loops / cycles — DAG-only by design.',
+  'No durable execution checkpoints or automatic replay on failure.',
+  'No mutable shared state between steps.',
+  'No mid-execution event injection into running workflows.',
+  'No mixed batch+streaming in one Story.',
+];
 
-const highlights: Highlight[] = [
-  {
-    eyebrow: 'Working Groups',
-    title: 'Operators, Engram authors, and transport leads ship together.',
-    description:
-      'Join weekly syncs to shape Bobrapet upgrades, EngramTemplate standards, and the shared backlog that lives in Git, not slides.',
-    items: [
-      'Operator guild publishes GitOps runbooks and drift dashboards.',
-      'Engram working group curates catalog reviews every Thursday.',
-      'Transport council tracks Bobravoz releases and prioritizes new adapters based on demand.',
-    ],
-    cta: {
-      label: 'View session calendar',
-      to: '/docs/community/get-involved#working-groups',
-    },
-  },
-  {
-    eyebrow: 'Discussion Board',
-    title: 'Ship faster with peers in GitHub Discussions.',
-    description:
-      'Trade Story patterns, telemetry dashboards, and Engram ideas with contributors who build in production and share manifests over screenshots.',
-    items: [
-      'Solution blueprints tagged by Story objective and compliant transports.',
-      'Troubleshooting threads with manifests, CLI snippets, and observability tips.',
-      'Showcase channel for catalog launches and partner integrations.',
-    ],
-    cta: {
-      label: 'Open discussions',
-      to: 'https://github.com/bubustack/bobrapet/discussions',
-      external: true,
-    },
-  },
-  {
-    eyebrow: 'Roadmap Snapshots',
-    title: 'Community backlog, updated in the open.',
-    description:
-      'Track feature delivery straight from Git history: Bobravoz upgrades, Engram templates, and SDK enhancements that ship in response to community contributions.',
-    items: [
-      'Sprint burndown with StoryRun metrics and Engram adoption stats.',
-      'Public board showing requested SDKs and transports without fixed timelines.',
-      'Open RFCs for catalog governance and compliance automation.',
-    ],
-    cta: {
-      label: 'Review community board',
-      to: '/docs/community/get-involved',
-    },
-  },
+const waysToHelp = [
+  'Test the platform on real workloads and open reproducible issues.',
+  'Improve docs and examples where onboarding is confusing.',
+  'Build and share Engrams and Impulses.',
+  'Contribute testkit, transport adapters, and storage backends.',
+];
+
+const roadmapNext = [
+  'Loop primitive — bounded iteration with exit conditions.',
+  'Workflow checkpointing — durable execution and restart recovery.',
+  'bubu-registry and bubu CLI for publishing/discovery workflows.',
+  'Python SDK with the same ABI contract as the Go SDK.',
+  'MCP gateway and native A2A protocol support.',
+  'Multi-cluster federation — global workflows across regions.',
+  'Compliance primitives — audit trails, cost attribution, EU AI Act traceability.',
+];
+
+const links = [
+  {label: 'Get Involved', to: '/docs/community/get-involved'},
+  {label: 'Roadmap', to: '/docs/community/roadmap'},
+  {label: 'GitHub', to: 'https://github.com/bubustack', external: true},
+  {label: 'Discord', to: 'https://discord.gg/bubustack', external: true},
+  {label: 'Examples', to: 'https://github.com/bubustack/examples', external: true},
 ];
 
 export default function CommunitySpotlight(): ReactNode {
@@ -70,38 +42,62 @@ export default function CommunitySpotlight(): ReactNode {
       <div className="container">
         <div className={styles.wrapper}>
           <header className={styles.header}>
-            <span className={styles.eyebrow}>Community Momentum</span>
+            <span className={styles.eyebrow}>Community</span>
             <h2 className={styles.title}>
-              Ship with a community that treats automation as a shared craft.
+              Manifesto lives in Get Involved. This section mirrors the roadmap.
             </h2>
             <p className={styles.subtitle}>
-              Working groups, discussions, and backlog snapshots keep founders, operators, and
-              contributors aligned on what ships next.
+              BubuStack is deployable today. The current limitations and direction are
+              tracked in the roadmap, and contribution flow is documented in Get Involved.
             </p>
           </header>
+
           <div className={styles.grid}>
-            {highlights.map(highlight => (
-              <article key={highlight.title} className={styles.card}>
-                <span className={styles.cardEyebrow}>{highlight.eyebrow}</span>
-                <h3 className={styles.cardTitle}>{highlight.title}</h3>
-                <p className={styles.cardDescription}>{highlight.description}</p>
-                <ul className={styles.itemList}>
-                  {highlight.items.map(item => (
-                    <li key={item} className={styles.item}>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+            <article className={styles.card}>
+              <h3 className={styles.cardTitle}>What is missing today</h3>
+              <ul className={styles.itemList}>
+                {roadmapNow.map(item => (
+                  <li key={item} className={styles.item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className={styles.card}>
+              <h3 className={styles.cardTitle}>What is next</h3>
+              <ul className={styles.itemList}>
+                {roadmapNext.map(item => (
+                  <li key={item} className={styles.item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className={styles.card}>
+              <h3 className={styles.cardTitle}>Where we need help</h3>
+              <ul className={styles.itemList}>
+                {waysToHelp.map(item => (
+                  <li key={item} className={styles.item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </div>
+
+          <div className={styles.ctaRow}>
+            <p className={styles.ctaText}>
+              The canonical sources are Get Involved and Roadmap. Homepage summary stays in sync with those pages.
+            </p>
+            <div className={styles.ctaButtons}>
+              {links.map(link => (
                 <Link
+                  key={link.label}
                   className={clsx('button button--sm', styles.cta)}
-                  to={highlight.to}
-                  {...(highlight.external
+                  to={link.to}
+                  {...(link.external
                     ? {target: '_blank', rel: 'noreferrer'}
                     : undefined)}>
-                  {highlight.label}
+                  {link.label}
                 </Link>
-              </article>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

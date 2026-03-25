@@ -5,8 +5,8 @@ import type * as Preset from '@docusaurus/preset-classic';
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: 'Bubustack | Cloud-Native AI Orchestration',
-  tagline: 'The open-source toolkit for building, deploying, and scaling production-grade AI workflows on Kubernetes.',
+  title: 'BubuStack | Composable Workflows on Kubernetes',
+  tagline: 'Open-source toolkit for declarative, composable workflows on Kubernetes. Do one thing and do it well.',
   favicon: 'img/favicon.svg',
 
   // Future flags, see https://docusaurus.io/docs/api/docusaurus-config#future
@@ -41,7 +41,8 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl: undefined,
+          editUrl: 'https://github.com/bubustack/website/edit/main/',
+          exclude: ['plans/**', 'deep-research/**'],
         },
         // Blog routes are disabled temporarily while we refresh long-form content.
         blog: false,
@@ -49,6 +50,20 @@ const config: Config = {
           customCss: './src/css/custom.css',
         },
       } satisfies Preset.Options,
+    ],
+  ],
+  plugins: [
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        hashed: true,
+        indexDocs: true,
+        indexBlog: false,
+        docsRouteBasePath: '/docs',
+        highlightSearchTermsOnTargetPage: true,
+        explicitSearchResultPath: true,
+        language: ['en'],
+      },
     ],
   ],
 
@@ -60,9 +75,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'Bubustack',
+      title: 'BubuStack',
       logo: {
-        alt: 'Bubustack Logo',
+        alt: 'BubuStack Logo',
         src: 'img/logo.svg',
       },
       items: [
@@ -73,19 +88,14 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          to: '/features',
-          label: 'Features',
-          position: 'left',
-        },
-        {
-          to: '/use-cases',
-          label: 'Use Cases',
-          position: 'left',
-        },
-        {
           to: '/docs/community/get-involved',
           label: 'Community',
           position: 'left',
+        },
+        {
+          href: 'https://github.com/bubustack/examples',
+          label: 'Examples',
+          position: 'right',
         },
         {
           href: 'https://github.com/bubustack',
@@ -98,36 +108,57 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Start Here',
           items: [
+            {label: 'Quickstart', to: '/docs/getting-started/quickstart'},
             {label: 'Overview', to: '/docs/overview'},
-            {label: 'Architecture', to: '/docs/ecosystem/architecture'},
+            {label: 'Examples', href: 'https://github.com/bubustack/examples'},
           ],
         },
         {
-          title: 'Operator & SDK',
+          title: 'Build & Operate',
           items: [
-            {label: 'Bobrapet Quickstart', to: '/docs/operator/quickstart'},
-            {label: 'Day-2 Operations', to: '/docs/operator/day-two-operations'},
+            {label: 'Operator Config', to: '/docs/operator/configuration'},
             {label: 'Go SDK', to: '/docs/sdk/go-sdk'},
-            {label: 'API Reference', to: '/docs/reference/api-reference'},
+            {label: 'Observability', to: '/docs/observability/overview'},
+          ],
+        },
+        {
+          title: 'Trust & Support',
+          items: [
+            {
+              label: 'Security Policy',
+              href: 'https://github.com/bubustack/website/blob/main/SECURITY.md',
+            },
+            {
+              label: 'Support',
+              href: 'https://github.com/bubustack/website/blob/main/SUPPORT.md',
+            },
+            {
+              label: 'Code of Conduct',
+              href: 'https://github.com/bubustack/website/blob/main/CODE_OF_CONDUCT.md',
+            },
           ],
         },
         {
           title: 'Community',
           items: [
             {
-              label: 'GitHub',
-              href: 'https://github.com/bubustack',
+              label: 'Get Involved',
+              to: '/docs/community/get-involved',
             },
             {
-              label: 'X (Twitter)',
-              href: 'https://x.com/bubustack',
+              label: 'Roadmap',
+              to: '/docs/community/roadmap',
+            },
+            {
+              label: 'Discord',
+              href: 'https://discord.gg/bubustack',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Bubustack. Built for operators.`,
+      copyright: `© ${new Date().getFullYear()} BubuStack. Licensed under Apache 2.0. Built for operators.`,
     },
     prism: {
       theme: prismThemes.github,

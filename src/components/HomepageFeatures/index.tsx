@@ -1,13 +1,19 @@
 import type {ReactNode} from 'react';
 import clsx from 'clsx';
+import Link from '@docusaurus/Link';
 import Heading from '@theme/Heading';
 import styles from './styles.module.css';
+
+type ProofPoint = {
+  text: string;
+  planned?: boolean;
+};
 
 type FeatureItem = {
   title: string;
   description: ReactNode;
   icon: ReactNode;
-  proofPoints: string[];
+  proofPoints: ProofPoint[];
 };
 
 const FeatureList: FeatureItem[] = [
@@ -31,19 +37,18 @@ const FeatureList: FeatureItem[] = [
     ),
     description: (
       <>
-        Deploy the Bobrapet operator once and reconcile Stories, Engrams, and Impulses
-        straight from Git. Platform teams stay in control while product squads ship on
-        top of familiar Kubernetes workflows.
+        Deploy the Bobrapet operator and manage Stories, Engrams, and Impulses as
+        Kubernetes CRDs. Everything lives in Git — use Flux, Argo CD, or plain kubectl.
       </>
     ),
     proofPoints: [
-      '3s median reconcile across 1.2k Stories in preview clusters keeps founders shipping fast.',
-      'Reuse existing RBAC, quota, and admission policies—nothing lives outside Git.',
-      'Roadmap: multi-cluster federation with topology-aware failover you can follow in GitOps PRs.',
+      {text: 'Standard CRDs with admission webhooks for validation and mutation.'},
+      {text: 'Reuse existing RBAC, quotas, and namespace policies — nothing proprietary.'},
+      {text: 'Works with any GitOps controller that applies Kubernetes manifests.'},
     ],
   },
   {
-    title: 'Reusable Engram Catalog',
+    title: 'Reusable Engram & Impulse Catalog',
     icon: (
       <svg viewBox="0 0 80 80" className={styles.featureIllustration} role="img">
         <defs>
@@ -65,15 +70,16 @@ const FeatureList: FeatureItem[] = [
     ),
     description: (
       <>
-        Package AI and data capabilities as EngramTemplates with a stable ABI so
-        contributors, partners, and internal teams co-author the same catalog without
-        code forks or lock-in.
+        Engrams process data. Impulses trigger workflows from external events.
+        Both are defined as templates with schema validation and shared through Git today.
+        A dedicated registry is planned.
       </>
     ),
     proofPoints: [
-      'Go SDK is production-ready; additional language SDKs open when community demand and contributions land.',
-      'Preview catalog ships with 40+ EngramTemplates covering RAG, guardrails, and evaluation rigs.',
-      'Versioned promotion workflow keeps staging → prod parity with GitOps diffs instead of proprietary exports.',
+      {text: 'Go SDK for building batch, streaming, and trigger (Impulse) components.'},
+      {text: 'Growing catalog of Engrams and Impulses — OpenAI, LiveKit, HTTP, and more.'},
+      {text: 'Testkit for local testing without a cluster.'},
+      {text: 'New SDKs (Python, TypeScript) and storage backends.', planned: true},
     ],
   },
   {
@@ -101,15 +107,15 @@ const FeatureList: FeatureItem[] = [
     ),
     description: (
       <>
-        Route Story data over Bobravoz gRPC now and extend transports through the same
-        declarative spec whenever the community contributes new adapters—no Story rewrites,
-        just opt-in manifests.
+        Route data over Bobravoz gRPC with hub-and-spoke or peer-to-peer topologies.
+        Transport selection is declarative per Story — swap transports without rewriting Engrams.
       </>
     ),
     proofPoints: [
-      'Bobravoz sustains 25k StepRun messages/min with end-to-end tracing in community benchmarks.',
-      'Declarative overrides let you mix transports per Story without touching Engram code.',
-      'Backlog for new transports stays community-driven; contributions land via open pull requests.',
+      {text: 'Bobravoz gRPC with backpressure, flow control, and OpenTelemetry tracing.'},
+      {text: 'Declarative transport overrides per Story — no Engram code changes needed.'},
+      {text: 'Transport spec is open for community-contributed adapters.'},
+      {text: 'New transport operators and mixed batch+streaming Stories.', planned: true},
     ],
   },
 ];
@@ -128,8 +134,14 @@ function Feature({title, icon, description, proofPoints}: FeatureItem) {
           <p className={styles.featureCopy}>{description}</p>
           <ul className={styles.featureProofList}>
             {proofPoints.map(point => (
-              <li key={point} className={styles.featureProofItem}>
-                {point}
+              <li key={point.text} className={clsx(styles.featureProofItem, point.planned && styles.featureProofPlanned)}>
+                {point.planned ? (
+                  <Link to="/docs/community/roadmap" className={styles.plannedLink}>
+                    * {point.text}
+                  </Link>
+                ) : (
+                  point.text
+                )}
               </li>
             ))}
           </ul>

@@ -1,9 +1,7 @@
 ---
 title: Docs Style Guide
-sidebar_position: 1
-description: Writing and formatting conventions for BubuStack documentation.
+description: Documentation style, structure, and terminology conventions.
 ---
-
 # Docs Style Guide
 
 This guide keeps BubuStack documentation consistent, clear, and easy to scan.
@@ -37,8 +35,8 @@ For short reference pages, you can omit "At a glance."
 
 ## References and paths
 
-- Use absolute doc paths like `/docs/runtime/inputs.md`.
-- Keep links in code formatting when they are paths.
+- Use relative markdown links like `[Inputs](../runtime/inputs.md)` instead of backtick-wrapped absolute paths.
+- Use a descriptive link text derived from the document title or surrounding context.
 - When referencing a config key, wrap it in backticks.
 
 ## Examples
@@ -74,3 +72,16 @@ Before submitting doc changes:
 - Confirm links in `/docs/` resolve to existing files.
 - Keep terminology aligned with resource names and CRD fields.
 - Ensure examples match the current schema and defaults.
+
+## Website content governance
+
+Use these rules for homepage, community, and roadmap copy:
+
+- Treat `docs/community/roadmap.md` and `docs/community/get-involved.md` as canonical for limitations, priorities, and contribution flow.
+- Keep homepage summary sections aligned with roadmap items; do not add claims on homepage that are not represented in roadmap/docs.
+- If capability is not implemented, label it as **(planned)** and link to the roadmap.
+- Do not publish fabricated social proof (users, adoption numbers, benchmark claims, testimonials).
+- Prefer founder-stage credibility signals: runnable examples, architecture docs, changelog/release links, and transparent known gaps.
+- Keep security and conduct contacts consistent with `SECURITY.md`, `SUPPORT.md`, `CODE_OF_CONDUCT.md`, and `CONTRIBUTING.md`.
+- Avoid duplicate navbar items that route to the same destination.
+- Keep internal planning content excluded from public docs output (`docs/plans/**`, `docs/deep-research/**`).

@@ -111,6 +111,22 @@
   position: relative;
 }
 
+.featureProofPlanned {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+.plannedLink {
+  color: var(--bubu-text-muted);
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.plannedLink:hover {
+  color: var(--ifm-color-primary);
+  text-decoration: underline;
+}
+
 .featureIllustration {
   height: 160px;
   width: 160px;

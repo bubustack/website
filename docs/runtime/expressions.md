@@ -1,3 +1,7 @@
+---
+title: Template Expressions
+description: Expression syntax, context matrix, and determinism rules.
+---
 <!--
 Copyright 2025 BubuStack.
 

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500" width="1500" height="500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1500" y2="500" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F0B1A"/>
+      <stop offset="0.5" stop-color="#110E1F"/>
+      <stop offset="1" stop-color="#0A0D14"/>
+    </linearGradient>
+    <linearGradient id="g" x1="0" y1="0" x2="180" y2="240" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="gText" x1="300" y1="0" x2="1200" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="gLine" x1="0" y1="0" x2="1500" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#8B5CF6" stop-opacity="0.3"/>
+      <stop offset="0.5" stop-color="#6D5CE7" stop-opacity="0.15"/>
+      <stop offset="0.8" stop-color="#22D3EE" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glowPurple" cx="400" cy="250" r="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B5CF6" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="1050" cy="250" r="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <style>
+      .link { stroke: url(#g); stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+      .node { fill: #ffffff; stroke: url(#g); stroke-width: 12; }
+      .dot { fill: #2a2045; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1500" height="500" fill="url(#bg)"/>
+  <rect width="1500" height="500" fill="url(#glowPurple)"/>
+  <rect width="1500" height="500" fill="url(#glowCyan)"/>
+
+  <!-- Grid dots -->
+  <g opacity="0.35">
+    <circle cx="100" cy="60" r="1" class="dot"/><circle cx="160" cy="60" r="1" class="dot"/>
+    <circle cx="220" cy="60" r="1" class="dot"/><circle cx="280" cy="60" r="1" class="dot"/>
+    <circle cx="1180" cy="60" r="1" class="dot"/><circle cx="1240" cy="60" r="1" class="dot"/>
+    <circle cx="1300" cy="60" r="1" class="dot"/><circle cx="1360" cy="60" r="1" class="dot"/>
+    <circle cx="1420" cy="60" r="1" class="dot"/>
+    <circle cx="100" cy="440" r="1" class="dot"/><circle cx="160" cy="440" r="1" class="dot"/>
+    <circle cx="220" cy="440" r="1" class="dot"/><circle cx="280" cy="440" r="1" class="dot"/>
+    <circle cx="1180" cy="440" r="1" class="dot"/><circle cx="1240" cy="440" r="1" class="dot"/>
+    <circle cx="1300" cy="440" r="1" class="dot"/><circle cx="1360" cy="440" r="1" class="dot"/>
+    <circle cx="1420" cy="440" r="1" class="dot"/>
+  </g>
+
+  <!-- Decorative nodes -->
+  <g opacity="0.12" filter="url(#softGlow)">
+    <line x1="80" y1="90" x2="180" y2="130" stroke="#8B5CF6" stroke-width="1.5"/>
+    <line x1="180" y1="130" x2="240" y2="100" stroke="#8B5CF6" stroke-width="1.5"/>
+    <circle cx="80" cy="90" r="3" fill="#8B5CF6"/>
+    <circle cx="180" cy="130" r="3" fill="#7C5CE7"/>
+    <circle cx="240" cy="100" r="3" fill="#6D5CE7"/>
+    <line x1="1250" y1="370" x2="1340" y2="400" stroke="#22D3EE" stroke-width="1.5"/>
+    <line x1="1340" y1="400" x2="1420" y2="380" stroke="#22D3EE" stroke-width="1.5"/>
+    <circle cx="1250" cy="370" r="3" fill="#22D3EE"/>
+    <circle cx="1340" cy="400" r="3" fill="#22D3EE"/>
+    <circle cx="1420" cy="380" r="3" fill="#22D3EE"/>
+  </g>
+
+  <!-- Bottom accent -->
+  <line x1="0" y1="498" x2="1500" y2="498" stroke="url(#gLine)" stroke-width="2"/>
+
+  <!-- B logo: scaled to ~200px tall, vertically centered -->
+  <g transform="translate(230, 130) scale(0.95)" filter="url(#glow)">
+    <path class="link" d="M70 42V214"/>
+    <path class="link" d="M70 42C118 42 156 48 171 73C181 90 177 110 156 120C140 128 114 128 70 128"/>
+    <path class="link" d="M70 128C119 128 157 133 174 153C188 170 183 194 158 206C141 214 114 214 70 214"/>
+    <rect class="node" x="56" y="28" width="24" height="24" rx="3"/>
+    <rect class="node" x="56" y="114" width="24" height="24" rx="3"/>
+    <rect class="node" x="56" y="200" width="24" height="24" rx="3"/>
+    <rect class="node" x="110" y="116" width="24" height="24" rx="3"/>
+  </g>
+
+  <!-- "ubuStack" — font-size 140, tight to B logo -->
+  <text x="430" y="293" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="140" font-weight="700" letter-spacing="1" fill="url(#gText)">ubuStack</text>
+
+  <!-- Subtitle — matched to ubuStack width -->
+  <text x="430" y="340" textLength="630" lengthAdjust="spacing" font-family="system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="24" font-weight="400" fill="#22D3EE" opacity="0.6">Composable workflows on Kubernetes</text>
+</svg>
