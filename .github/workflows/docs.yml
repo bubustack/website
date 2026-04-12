@@ -58,6 +58,15 @@ jobs:
             --no-progress
             --accept 200,206,429
             --exclude https://discord.gg/.*
+            --exclude https://github.com/bubustack/bubuilder
+            --exclude https://github.com/bubustack/cron-impulse
+            --exclude https://github.com/bubustack/github-webhook-impulse
+            --exclude https://github.com/bubustack/json-filter-engram
+            --exclude https://github.com/bubustack/kubernetes-impulse
+            --exclude https://github.com/bubustack/livekit-bridge-engram
+            --exclude https://github.com/bubustack/map-reduce-adapter-engram
+            --exclude https://github.com/bubustack/materialize-engram
+            --exclude https://github.com/bubustack/website/edit/main/
             README.md
             CONTRIBUTING.md
             SECURITY.md

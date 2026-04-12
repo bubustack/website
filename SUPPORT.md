@@ -4,7 +4,7 @@ Thank you for using BubuStack. Here's how you can get help.
 
 ## Self-Service
 
-- **Documentation**: https://bubustack.io/docs
+- **Documentation**: https://bubustack.io/docs/overview
 - **Roadmap**: https://bubustack.io/docs/community/roadmap
 - **Examples**: https://github.com/bubustack/examples
 

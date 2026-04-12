@@ -8,7 +8,7 @@ runtimes.
 ## 🔗 Quick Links
 
 - Live site: https://bubustack.io
-- Docs: https://bubustack.io/docs
+- Docs: https://bubustack.io/docs/overview
 - Roadmap: https://bubustack.io/docs/community/roadmap
 - Examples: https://github.com/bubustack/examples
 - Website issues: https://github.com/bubustack/website/issues
