@@ -15,6 +15,16 @@ const sidebars: SidebarsConfig = {
       items: [
         'overview/architecture',
         'overview/core',
+        {
+          type: 'link',
+          label: 'core (repo)',
+          href: 'https://github.com/bubustack/core',
+        },
+        {
+          type: 'link',
+          label: 'tractatus (repo)',
+          href: 'https://github.com/bubustack/tractatus',
+        },
         'overview/component-ecosystem',
         'overview/durable-semantics',
         'overview/alternatives',
@@ -45,12 +55,17 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'API',
-      items: ['api/crd-cheatsheet', 'api/crd-design', 'api/scoping', 'api/versioning', 'api/errors', 'api/migration'],
+      items: ['api/crd-cheatsheet', 'api/crd-design', 'api/story-trigger', 'api/effect-claims', 'api/scoping', 'api/versioning', 'api/errors', 'api/migration'],
     },
     {
       type: 'category',
       label: 'Operator',
-      items: ['operator/profiles', 'operator/configuration'],
+      items: [
+        'operator/profiles',
+        'operator/configuration',
+        'operator/runner-rbac',
+        'operator/bobravoz-grpc-configuration',
+      ],
     },
     {
       type: 'category',

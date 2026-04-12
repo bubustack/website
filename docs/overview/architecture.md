@@ -47,7 +47,7 @@ BubuStack comprises multiple independent Go modules, each with its own `go.mod`.
 | Module | Purpose | Scope |
 | --- | --- | --- |
 | [tractatus](https://github.com/bubustack/tractatus) | Protobuf service and message definitions for gRPC transport. | Cluster |
-| [core](https://github.com/bubustack/core) | Shared runtime contracts, templating engine, transport connector runtime, identity helpers. | Cluster |
+| [core](https://github.com/bubustack/core) | Shared contracts, templating engine, transport protocol/env helpers, connector runtime helpers, and identity helpers. | Cluster |
 | [bobrapet](https://github.com/bubustack/bobrapet) | Kubernetes operator: CRDs, controllers, webhooks, config resolver, storage client, enums, refs. | Cluster |
 | [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) | Go SDK for building Engrams and Impulses. Testkit, conformance suites, K8s client helpers. | Component |
 | [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) | Streaming transport operator: gRPC hub, transport topology analysis, connector lifecycle. | Cluster |
@@ -72,7 +72,7 @@ graph BT
     end
 
     subgraph Shared
-        core["core<br/><i>contracts · templating · transport runtime</i>"]
+        core["core<br/><i>contracts · templating · transport helpers</i>"]
     end
 
     subgraph Operator
@@ -140,7 +140,7 @@ graph LR
 | Rule | Description |
 | --- | --- |
 | Layer N may only import layers < N | Prevents cycles. `core` can import `tractatus` but never `bobrapet`. |
-| Satellite services ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc), [bubuilder](https://github.com/bubustack/bubuilder)) sit at Layer 4 | They import `bobrapet` and `core` but never each other or the SDK. |
+| Satellite services ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc), [bubuilder](https://github.com/bubustack/bubuilder)) sit alongside the numbered ladder | They import lower layers such as `bobrapet`, `core`, and `tractatus`, but they are not part of the main operator → SDK → component ladder. |
 | Engrams and Impulses import [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) as their primary dependency | Direct `bobrapet` imports are discouraged; use the SDK re-exports. |
 | `bubu-registry` is standalone | Zero bubustack module dependencies. |
 
@@ -167,7 +167,10 @@ Provides cross-cutting utilities consumed by both the operator and the SDK:
 - `core/contracts` — Environment variable names, label keys, annotation keys,
   and structured constants shared between controllers and SDKs.
 - `core/templating` — Go template + Sprig.
-- `core/runtime/transport` — Transport connector runtime and codec negotiation.
+- `core/runtime/transport` — Binding envelopes, protocol checks, and shared
+  transport env helpers.
+- `core/runtime/transport/connector` — Connector config, dial/listen helpers,
+  TLS setup, and runtime tunables.
 - `core/runtime/identity` — Deterministic identity derivation for runs.
 - `core/runtime/featuretoggles` — Feature toggle helpers.
 
@@ -202,7 +205,7 @@ The public Go SDK for building Engrams and Impulses:
 - **Streaming execution** — `sdk.StartStreaming[C]` for continuous processing
   with gRPC bidirectional streaming.
 - **Impulse execution** — `sdk.RunImpulse[C]` for long-running triggers that
-  create StoryRuns from external events.
+  submit durable `StoryTrigger` requests from external events.
 - Schema validation (input/output against EngramTemplate/ImpulseTemplate schemas).
 - Effect tracking and signal replay.
 - Transport connector integration.
@@ -234,7 +237,8 @@ outputs. They run as either Kubernetes Jobs (batch) or Deployments (streaming).
 | Streaming engrams | [openai-stt-engram](https://github.com/bubustack/openai-stt-engram), [openai-tts-engram](https://github.com/bubustack/openai-tts-engram), [openai-chat-engram](https://github.com/bubustack/openai-chat-engram), [silero-vad-engram](https://github.com/bubustack/silero-vad-engram), [livekit-bridge-engram](https://github.com/bubustack/livekit-bridge-engram), [livekit-turn-detector-engram](https://github.com/bubustack/livekit-turn-detector-engram), [mcp-adapter-engram](https://github.com/bubustack/mcp-adapter-engram) |
 
 **Impulses** trigger workflows — they listen for external events (webhooks,
-cron schedules, Kubernetes events) and create StoryRuns via the SDK.
+cron schedules, Kubernetes events) and submit durable `StoryTrigger` requests
+via the SDK.
 
 | Component | Trigger source |
 | --- | --- |
@@ -306,7 +310,7 @@ graph TB
     operator -->|"creates / reconciles"| engram_job
     operator -->|"creates / reconciles"| engram_deploy
     operator -->|"creates / reconciles"| connector
-    impulse -->|"creates StoryRuns"| operator
+    impulse -->|"submits StoryTriggers"| operator
     builder -->|"reads / patches"| operator
     bobravoz -->|"watches Transport CRDs /<br/>manages streaming topology"| operator
     engram_deploy <-->|"gRPC streams"| connector
@@ -330,8 +334,8 @@ graph TB
 ### Data plane
 
 - **Impulse pods** run trigger workloads (Deployments) that receive external
-  events — webhooks, cron ticks, Kubernetes watch events — and create
-  StoryRuns via the SDK (`sdk.RunImpulse`).
+  events — webhooks, cron ticks, Kubernetes watch events — and submit
+  `StoryTrigger` requests via the SDK (`sdk.RunImpulse`).
 - **Engram Jobs** execute batch steps as Kubernetes Jobs. The operator creates
   one Job per StepRun and monitors exit codes, retries, and outputs.
 - **Engram Deployments** execute streaming steps as long-lived Deployments.

@@ -98,6 +98,37 @@ The following limits apply:
 
 Use storage references when payloads exceed these limits.
 
+## Shared operator storage
+
+Offloading is not just an SDK concern. If a client or SDK offloads Story
+trigger inputs, StoryRun inputs, or large step payloads, the workflow operator
+must be configured with shared storage (`controller.storage.*`) so it can
+hydrate and resolve those refs later.
+
+The same applies when a durable `StoryTrigger` request resolves into a
+`StoryRun`. If the accepted trigger payload is larger than
+`storyrun.max-inline-inputs-size`, the controller offloads `StoryRun.spec.inputs`
+before create. That controller-side offload path uses the same shared storage
+backend and will fail if `controller.storage.*` is unset.
+
+If shared storage is not configured:
+
+- direct API clients must stay within inline limits or submit storage refs that
+  the operator can already resolve;
+- SDK helpers that try to offload oversized payloads will fail before the
+  StoryTrigger or StoryRun is admitted.
+- `StoryTrigger` requests with oversized accepted inputs can be persisted, but
+  controller-side resolution into a `StoryRun` will fail because the controller
+  cannot offload the resulting `StoryRun.spec.inputs`.
+
+Running an S3-compatible service in-cluster is not enough on its own. Bobrapet
+must be pointed at that backend.
+
+When those offloaded payloads are deeply nested, hydration is also bounded by a
+recursion budget. The global default comes from
+`engram.default-max-recursion-depth`, and individual Stories can raise it with
+`spec.policy.execution.maxRecursionDepth`.
+
 ## Large aggregates (user responsibility)
 
 The controller does **not** auto-offload oversized Step inputs or StoryRun final
@@ -125,9 +156,12 @@ object containing `$bubuStorageRef`, the engine treats it as offloaded data:
 - Default behavior (`templating.offloaded-data-policy=error`): evaluation fails with a clear error.
 - Injection behavior (`templating.offloaded-data-policy=inject`): a materialize StepRun/engram is created
   to hydrate the data and resolve the template, then execution continues.
+- Controller behavior (`templating.offloaded-data-policy=controller`): the
+  controller hydrates the offloaded data in-process and resolves the template
+  without creating a materialize StepRun.
 
 The materialize engram name is configured by `templating.materialize-engram`
-(commonly set to `materialize`).
+(commonly set to `materialize`) and is only used for `inject`.
 
 ## Redaction rules
 
@@ -144,3 +178,11 @@ Inline payloads are stored in etcd; treat them as non-sensitive.
 ConfigMap and Secret references can appear anywhere a payload is accepted.
 References must be well-formed (string form `name:key` or object form with
 `name`/`key` fields); malformed refs are rejected by admission validation.
+
+## Current runtime delivery
+
+Today, resolved runtime payloads are still delivered through a mix of StepRun
+fields, storage refs, and pod environment variables. That contract works, but
+it is env-heavy for complex workloads. A planned operator improvement will move
+large evaluated runtime payloads toward artifact-backed delivery instead of
+inline env expansion. See the [Roadmap](../community/roadmap.md).

@@ -135,7 +135,8 @@ export default function Home(): ReactNode {
             <p>
             Define workflows as CRDs, deploy with your GitOps controller, observe with OpenTelemetry.
             Every change is versioned, reviewed, and deployed through standard Git workflows.
-            Build new Engrams and Impulses, share them through GitHub today, and track registry work on the roadmap.
+            Build new Engrams and Impulses, share them through GitHub today, and track registry work,
+            operator hardening, and the remaining architectural gaps on the roadmap.
             </p>
             <div className={styles.heroButtons}>
               <Link

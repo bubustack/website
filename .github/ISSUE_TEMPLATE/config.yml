@@ -1,8 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Security reports
-    url: https://github.com/bubustack/.github/security/advisories/new
-    about: Please use our private reporting channel for vulnerabilities.
+  - name: Website security reports
+    url: https://github.com/bubustack/website/security/advisories/new
+    about: Use the website repository advisory flow for vulnerabilities in this repository.
+  - name: Component security routing
+    url: https://github.com/bubustack/website/blob/main/SECURITY.md
+    about: For bobrapet, bobravoz-grpc, bubu-sdk-go, core, or tractatus issues, use the owning repository listed in SECURITY.md.
   - name: Architecture & roadmap discussions
     url: https://github.com/orgs/bubustack/discussions
     about: For proposals that span multiple repositories, start a discussion before opening issues.

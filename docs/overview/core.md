@@ -33,8 +33,9 @@ well**, and **write programs to work together**.
   wiring step outputs to step inputs through templates. Replace one Engram and
   the rest of the pipeline is unaffected.
 - An **Impulse** is a trigger. It listens for external events — webhooks, cron
-  schedules, Kubernetes resource changes — and creates StoryRuns with mapped
-  inputs. It has no knowledge of the workflow it starts.
+  schedules, Kubernetes resource changes — and submits `StoryTrigger` requests
+  with mapped inputs. The controller resolves those requests into `StoryRun`s.
+  It has no knowledge of the workflow it starts.
 - **Step outputs** are the universal interface. JSON flows between steps. There
   is no proprietary IPC — just structured data evaluated through the template
   engine (`{{ steps["fetch"].output.body }}`).
@@ -58,7 +59,8 @@ The pipeline doesn't care.
 - **StoryRun** is a concrete execution of a Story with resolved inputs and outputs.
 - **StepRun** is the execution record for a single step within a StoryRun.
 - **Engram** and **EngramTemplate** define executable components and their schemas.
-- **Impulse** and **ImpulseTemplate** define triggers that launch StoryRuns from external events.
+- **Impulse** and **ImpulseTemplate** define triggers that submit durable
+  `StoryTrigger` requests from external events.
 
 See [CRD Design](../api/crd-design.md) for the full resource model and relationships.
 
@@ -69,23 +71,29 @@ See [CRD Design](../api/crd-design.md) for the full resource model and relations
 | Resource | Purpose | Key fields |
 | --- | --- | --- |
 | Story | Declarative workflow definition. | `spec.pattern`, `spec.steps`, `spec.inputsSchema`, `spec.outputsSchema`, `spec.output`, `spec.compensations`, `spec.finally`, `spec.policy` |
+| StoryTrigger | Durable trigger admission request for external events. | `spec.storyRef`, `spec.deliveryIdentity`, `status.decision`, `status.storyRunRef` |
 | StoryRun | An execution of a Story with concrete inputs and outputs. | `spec.storyRef`, `spec.inputs`, `status.phase`, `status.stepStates`, `status.output` |
 | StepRun | An execution of a single step within a StoryRun. | `spec.stepId`, `spec.input`, `spec.timeout`, `spec.retry`, `status.phase`, `status.output` |
+| EffectClaim | Durable reservation and completion authority for one step side effect. | `spec.stepRunRef`, `spec.effectKey`, `spec.holderIdentity`, `status.phase` |
 | Engram | A configured component instance used by Story steps. | `spec.templateRef`, `spec.mode`, `spec.with`, `spec.executionPolicy` |
 | EngramTemplate | Cluster-scoped component definition with schema and defaults. | `spec.inputSchema`, `spec.outputSchema`, `spec.execution` |
-| Impulse | A trigger that launches StoryRuns from external events. | `spec.templateRef`, `spec.storyRef`, `spec.mapping`, `spec.deliveryPolicy`, `spec.throttle` |
+| Impulse | A trigger that submits durable `StoryTrigger` requests from external events. | `spec.templateRef`, `spec.storyRef`, `spec.mapping`, `spec.deliveryPolicy`, `spec.throttle` |
 | ImpulseTemplate | Cluster-scoped trigger definition. | `spec.contextSchema`, `spec.deliveryPolicy` |
 
 ---
 
 ## Execution flow (simplified)
 
-1. An [Impulse](https://github.com/orgs/bubustack/repositories?q=impulse) receives an event and maps it to StoryRun inputs.
-2. The StoryRun controller resolves the Story and builds the DAG.
-3. StepRuns are created as steps become ready.
-4. If a template references offloaded data, the controller resolves it based on policy: in-process hydration from S3 (`controller`), pod-based materialization (`inject`), or rejection (`error`).
-5. StepRuns execute [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) or primitives and publish outputs.
-6. StoryRun aggregates step states and final output.
+1. An [Impulse](https://github.com/orgs/bubustack/repositories?q=impulse) receives an event and maps it to a durable `StoryTrigger` request.
+2. The StoryTrigger controller validates the request and creates or reuses the target `StoryRun`.
+3. The StoryRun controller resolves the Story and builds the DAG.
+4. StepRuns are created as steps become ready.
+5. If a template references offloaded data, the controller resolves it based on
+   policy: in-process hydration (`controller`), pod-based materialization
+   (`inject`), or rejection (`error`). A Story can also force controller-side
+   resolution with `bubustack.io/controller-resolve: "true"`.
+6. StepRuns execute [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) or primitives and publish outputs.
+7. StoryRun aggregates step states and final output.
 
 ---
 
@@ -124,15 +132,15 @@ Details of primitive behavior are in [Primitives](../runtime/primitives.md).
 
 ---
 
-## Execution patterns: batch vs streaming
+## Execution patterns: batch vs realtime
 
 Stories declare `spec.pattern`:
 - `batch`: short-lived StoryRuns, standard DAG scheduling.
-- `streaming`: long-lived topologies where steps process packets.
+- `realtime`: long-lived topologies where steps process packets.
 
 Evaluation behavior differs by field:
 
-| Field | Batch evaluation | Streaming evaluation |
+| Field | Batch evaluation | Realtime evaluation |
 | --- | --- | --- |
 | `steps[].if` | Runtime (DAG controller). | Runtime per packet (hub). |
 | `steps[].with` | Runtime at StepRun creation. | Runtime per packet, `inputs` only (deterministic). |
@@ -178,9 +186,12 @@ treated as literals. The engine is Go templates plus Sprig with custom helpers
 to preserve replayability.
 
 When a template references offloaded payloads, the platform either rejects the
-evaluation (default) or injects a materialize StepRun to hydrate and resolve the
-template, depending on `templating.offloaded-data-policy`. The materialize engram is
-selected via `templating.materialize-engram`.
+evaluation (`error`), injects a materialize StepRun to hydrate and resolve the
+template (`inject`), or resolves the offloaded data in-process on the
+controller (`controller`), depending on `templating.offloaded-data-policy`.
+The materialize engram is selected via `templating.materialize-engram` when the
+policy is `inject`. A Story can also force controller-side resolution with
+`bubustack.io/controller-resolve: "true"`.
 
 ---
 
@@ -210,13 +221,13 @@ and at different scopes:
 | --- | --- | --- | --- |
 | **Job backoff** | Pod failures within a single Kubernetes Job. Kubelet restarts the pod container up to `backoffLimit` times. | Kubernetes Job controller | `JobPolicy.backoffLimit`, `JobWorkloadConfig.backoffLimit`, or operator default `job.backoff-limit`. `RestartPolicy` is set to `Never` (new pod per retry) or `OnFailure` (in-place restart). |
 | **Step retry** | Entire step execution (creates a new Job/pod). Triggered when a StepRun finishes with a retryable exit class and retries remain. | StepRun controller | `RetryPolicy.maxRetries`, `delay`, `maxDelay`, `backoff`, `jitter`. Template defaults via `TemplateRetryPolicy.recommendedMaxRetries`, `recommendedBaseDelay`, `recommendedMaxDelay`, `recommendedBackoff`. Operator default `retry.max-retries`. |
-| **Trigger delivery retry** | Submission of a trigger event to create a StoryRun. Retried by the [SDK](https://github.com/bubustack/bubu-sdk-go) inside the Impulse workload. | SDK (runs inside Impulse pod) | `TriggerDeliveryPolicy.retry` (maxAttempts, baseDelay, maxDelay, backoff). Defaults from `ImpulseTemplate.spec.deliveryPolicy`, overridable on `Impulse.spec.deliveryPolicy`. |
+| **Trigger delivery retry** | Submission of a trigger event to create or recover one durable `StoryTrigger` request. Retried by the [SDK](https://github.com/bubustack/bubu-sdk-go) inside the Impulse workload. | SDK (runs inside Impulse pod) | `TriggerDeliveryPolicy.retry` (maxAttempts, baseDelay, maxDelay, backoff). Defaults from `ImpulseTemplate.spec.deliveryPolicy`, overridable on `Impulse.spec.deliveryPolicy`. |
 
 **Key distinction:** Job backoff and step retry both affect the same step but at
 different levels. A step with `backoffLimit: 3` and `maxRetries: 2` can produce
 up to `(3+1) * (2+1) = 12` pod attempts in the worst case (3 pod restarts per
 Job x 3 Jobs). Trigger delivery retry is entirely separate and concerns
-StoryRun creation, not step execution.
+`StoryTrigger` submission and controller resolution, not step execution.
 
 Template-level fields (`TemplateJobPolicy`, `TemplateRetryPolicy`) provide
 recommended defaults prefixed with `recommended*`. These are merged into the
@@ -237,6 +248,23 @@ running inside the Impulse workload (templates do not provide throttle defaults)
 
 When throttling delays a trigger, the SDK patches `Impulse.status.throttledTriggers`
 and `Impulse.status.lastThrottled` so operators can observe backpressure.
+
+### Managed runner permissions
+
+Controller-managed runner ServiceAccounts are namespaced identities created for
+Impulses and Story step workloads. The important contract is:
+
+- trigger workloads submit `StoryTrigger` requests and read back `StoryRun`
+  resolution
+- trigger workloads that call `sdk.StopStory(...)` also need
+  `storyruns/status` patch access
+- step workloads get the baseline `StepRun`, `EffectClaim`, and
+  `TransportBinding` permissions required by the runtime control plane
+
+If a component needs more than the baseline, add it through template or
+instance `execution.rbac.rules`. If you use a custom `serviceAccountName`, you
+own the Role and RoleBinding yourself. See
+[Managed Runner RBAC](../operator/runner-rbac.md).
 
 ### Impulse throttling example
 

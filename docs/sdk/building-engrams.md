@@ -89,7 +89,9 @@ func (e *MyEngram) Process(ctx context.Context, execCtx *engram.ExecutionContext
 }
 
 func main() {
-    sdk.StartBatch(context.Background(), New())
+    if err := sdk.StartBatch(context.Background(), New()); err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -104,7 +106,7 @@ func main() {
 
 ### Timeout handling
 
-Batch steps enforce `BUBU_STEP_TIMEOUT` (default 30 minutes). If the timeout
+Batch steps enforce `BUBU_STEP_TIMEOUT` (shipped operator default: 5 minutes). If the timeout
 fires, the SDK patches the StepRun with exit code 124 (retryable) and force-exits
 the process to prevent zombie Jobs.
 
@@ -120,7 +122,7 @@ process a continuous flow of messages.
 ```go
 type StreamingEngram[C any] interface {
     Init(ctx context.Context, config C, secrets *engram.Secrets) error
-    Stream(ctx context.Context, in <-chan engram.StreamMessage, out chan<- engram.StreamMessage) error
+    Stream(ctx context.Context, in <-chan engram.InboundMessage, out chan<- engram.StreamMessage) error
 }
 ```
 
@@ -151,7 +153,7 @@ func (e *MyStreamEngram) Init(ctx context.Context, cfg Config, secrets *engram.S
     return nil
 }
 
-func (e *MyStreamEngram) Stream(ctx context.Context, in <-chan engram.StreamMessage, out chan<- engram.StreamMessage) error {
+func (e *MyStreamEngram) Stream(ctx context.Context, in <-chan engram.InboundMessage, out chan<- engram.StreamMessage) error {
     for {
         select {
         case <-ctx.Done():
@@ -161,13 +163,20 @@ func (e *MyStreamEngram) Stream(ctx context.Context, in <-chan engram.StreamMess
                 return nil
             }
             // Process and forward
-            out <- msg
+            select {
+            case out <- msg.StreamMessage:
+            case <-ctx.Done():
+                return ctx.Err()
+            }
+            msg.Done()
         }
     }
 }
 
 func main() {
-    sdk.StartStreaming(context.Background(), New())
+    if err := sdk.StartStreaming(context.Background(), New()); err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -176,8 +185,25 @@ func main() {
 - The SDK starts a gRPC server on `BUBU_GRPC_PORT` (default 50051).
 - Messages flow through bidirectional gRPC streams with the transport hub.
 - Heartbeats are handled transparently by the SDK.
+- The inbound channel carries `engram.InboundMessage`, which embeds `StreamMessage`
+  and adds `Done()`.
+- Call `msg.Done()` after successful handling or intentional drop. For
+  best-effort traffic this is a no-op; for ordered / replay-capable traffic it
+  advances delivery acknowledgement and deduplication.
 - Backpressure is applied when the output channel buffer is full.
 - Graceful shutdown drains in-flight messages on SIGTERM.
+
+### Inbound and outbound message types
+
+Inbound deliveries arrive as `engram.InboundMessage`. It embeds
+`engram.StreamMessage` plus a `Done()` method used by the SDK runtime to track
+processing completion for ordered / replayable transports. Outbound deliveries
+still use plain `engram.StreamMessage`.
+
+For structured JSON streaming outputs, keep the canonical JSON bytes in
+`Payload` and mirror the same bytes into `Binary` with
+`MimeType: application/json`. Reserve raw `Binary` without `Payload` for
+opaque media or non-JSON blobs.
 
 ### StreamMessage fields
 
@@ -195,8 +221,9 @@ func main() {
 
 ## Impulses (event triggers)
 
-Impulses are long-running services that listen for external events and launch
-StoryRuns when triggered.
+Impulses are long-running services that listen for external events and submit
+durable `StoryTrigger` requests. The controller resolves those requests into
+`StoryRun`s and records whether they were created, reused, or rejected.
 
 ### Interface
 
@@ -236,27 +263,32 @@ func (i *MyImpulse) Init(ctx context.Context, cfg Config, secrets *engram.Secret
 }
 
 func (i *MyImpulse) Run(ctx context.Context, client *k8s.Client) error {
-    // Listen for events, then trigger StoryRuns:
-    // sdk.StartStory(ctx, "my-story", map[string]any{"key": "value"})
-    <-ctx.Done()
-    return nil
+    _, err := sdk.StartStoryWithToken(ctx, "my-story", "source-event-id-123", map[string]any{
+        "key": "value",
+    })
+    return err
 }
 
 func main() {
-    sdk.RunImpulse(context.Background(), New())
+    if err := sdk.RunImpulse(context.Background(), New()); err != nil {
+        panic(err)
+    }
 }
 ```
 
-### StoryRun helpers
+### Trigger helpers
 
-The SDK provides helpers for triggering StoryRuns from Impulses:
+The SDK provides helpers for durable trigger submission from Impulses:
 
 | Function | Description |
 |----------|-------------|
-| `sdk.StartStory(ctx, storyName, inputs)` | Trigger a new StoryRun |
-| `sdk.StartStoryWithToken(ctx, storyName, token, inputs)` | Idempotent trigger (dedup by token) |
+| `sdk.StartStory(ctx, storyName, inputs)` | Submit a `StoryTrigger` and wait for the resolved `StoryRun` |
+| `sdk.StartStoryWithToken(ctx, storyName, token, inputs)` | Deterministic trigger identity for retries and duplicate suppression |
 | `sdk.StopStory(ctx, storyRunName)` | Cancel an in-flight StoryRun |
 | `sdk.GetTargetStory()` | Resolve target story name from environment |
+
+For the latest contract, the SDK no longer creates `StoryRun` objects directly
+from the trigger helper path.
 
 ---
 
@@ -280,8 +312,9 @@ func (e *MyEngram) Init(ctx context.Context, cfg Config, secrets *engram.Secrets
 | Method | Description |
 |--------|-------------|
 | `Get(key)` | Retrieve a specific secret value |
-| `GetAll()` | List keys with values redacted |
-| `Raw()` | Direct unredacted map (use carefully) |
+| `GetAll()` | Return a copy of all currently loaded secrets |
+| `Names()` | Return sorted key names without values |
+| `Select(keys...)` | Return a bounded plaintext subset by key |
 
 Secrets implement `fmt.Formatter` to prevent accidental logging of values.
 
@@ -332,10 +365,12 @@ func (e *MyEngram) Process(ctx context.Context, execCtx *engram.ExecutionContext
 Declare side effects for tracking and auditability:
 
 ```go
-sdk.RecordEffect(ctx, "email.sent", map[string]any{"to": "user@example.com"})
+sdk.RecordEffect(ctx, "email.sent", "succeeded", map[string]any{"to": "user@example.com"})
 ```
 
-Effects are patched to the StepRun status and are visible in the run history.
+The latest contract uses `EffectClaim` as the durable reservation authority for
+`sdk.ExecuteEffectOnce(...)`. `StepRun.status.effects` remains the append-only
+run-history mirror written by `sdk.RecordEffect(...)`.
 
 ---
 
@@ -423,6 +458,9 @@ h := testkit.StreamHarness[Config]{
 }
 outputs, err := h.Run(context.Background())
 ```
+
+`StreamHarness.Inputs` remains `[]engram.StreamMessage`; the harness wraps them
+into inbound messages before calling your `Stream` method.
 
 ### Conformance testing
 
@@ -541,11 +579,11 @@ The operator injects these environment variables into component pods:
 | Variable | Description |
 |----------|-------------|
 | `BUBU_TEMPLATE_CONTEXT` | JSON-encoded template context (story, run, step info) |
-| `BUBU_STEP_TIMEOUT` | Batch step timeout (default 30m) |
+| `BUBU_STEP_TIMEOUT` | Batch step timeout (shipped Bobrapet default: 5m) |
 | `BUBU_GRPC_PORT` | Streaming gRPC server port (default 50051) |
-| `BUBU_GRPC_ADDRESS` | gRPC dial address for transport hub |
 | `BUBU_GRPC_DIAL_TIMEOUT` | gRPC connection timeout |
-| `BUBU_TRANSPORT_BINDING` | Transport binding name for streaming steps |
+| `BUBU_TRANSPORT_BINDING` | Serialized transport-binding envelope for the streaming workload |
+| `BUBU_TRANSPORT_ENDPOINT` | Resolved transport endpoint for the current workload |
 | `BUBU_SDK_TRACING_ENABLED` | Enable/disable OTel tracing |
 | `BUBU_SDK_METRICS_ENABLED` | Enable/disable OTel metrics |
 | `BUBU_HYBRID_BRIDGE` | Enable batch-to-stream output forwarding |

@@ -84,7 +84,7 @@ To allow failures for specific branches, set `allowFailure: true` on that branch
 
 ## Batch-only primitives
 
-`gate` and `wait` are allowed only in batch Stories. The admission webhook rejects these step types when `spec.pattern: streaming`.
+`gate` and `wait` are allowed only in batch Stories. The admission webhook rejects these step types when `spec.pattern: realtime`.
 
 ## Cleanup blocks
 
@@ -135,7 +135,7 @@ kind: Story
 metadata:
   name: streaming-with-cleanup
 spec:
-  pattern: streaming
+  pattern: realtime
   steps:
   - name: transcribe
     ref:

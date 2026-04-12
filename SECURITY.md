@@ -2,17 +2,33 @@
 
 ## Supported versions
 
-We provide security updates for the latest released minor of the operator. Please ensure you are using a supported version to receive security patches. We generally support the latest minor and the immediately previous minor.
+This repository publishes the latest BubuStack website and documentation. For
+runtime and operator security support, treat the latest released line of the
+owning component repository as supported. Older releases and unreleased commits
+are unsupported unless that repository's `SECURITY.md` says otherwise.
 
-Supported Kubernetes versions: we aim to support N-2 of upstream stable releases. For example, when Kubernetes 1.31 is current, we target 1.31, 1.30, 1.29. See the bobrapet repository CI matrix and release notes for exact compatibility.
+Supported Kubernetes versions follow the latest compatibility matrix published
+by the owning component repository. For controller/runtime issues, use the
+bobrapet release notes and CI matrix as the source of truth.
 
 ## Reporting a vulnerability
 
-The BubuStack Team and community take all security vulnerabilities seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
+The BubuStack Team and community take all security vulnerabilities seriously.
+Use the GitHub Security Advisory flow in the repository that owns the affected
+code:
 
-To report an operator/platform vulnerability, please use the GitHub Security Advisory feature in the bobrapet repository:
+| Area | Security advisory intake |
+| --- | --- |
+| Website/docs build, Docusaurus site, repo workflows | https://github.com/bubustack/website/security/advisories/new |
+| Workflow operator, CRDs, controllers, webhooks | https://github.com/bubustack/bobrapet/security/advisories/new |
+| Streaming hub, connector injection, transport topology | https://github.com/bubustack/bobravoz-grpc/security/advisories/new |
+| SDK behavior and runtime helper APIs | https://github.com/bubustack/bubu-sdk-go/security/advisories/new |
+| Shared contracts, templating, transport envelopes | https://github.com/bubustack/core/security/advisories/new |
+| Protobuf contracts and generated bindings | https://github.com/bubustack/tractatus/security/advisories/new |
 
-- https://github.com/bubustack/bobrapet/security/advisories/new
+For docs mistakes, stale content, broken links, or other non-security website
+issues, open a normal issue or PR in `bubustack/website` instead of using the
+security advisory flow.
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
@@ -20,7 +36,7 @@ When reporting a vulnerability, please provide the following information:
 
 - **A clear description** of the vulnerability and its potential impact.
 - **Steps to reproduce** the vulnerability, including any example code, scripts, or configurations.
-- **The version(s) of the operator** affected.
+- **The version(s) of the affected component or repository**.
 - **Your contact information** for us to follow up with you.
 
 ## Disclosure process
@@ -31,7 +47,6 @@ When reporting a vulnerability, please provide the following information:
 4.  **Fix**: We will develop a patch for the vulnerability.
 5.  **Disclosure**: We will create a security advisory, issue a CVE (if applicable), and release a new version with the patch. We will credit you for your discovery unless you prefer to remain anonymous.
 
-We aim to resolve high severity vulnerabilities within 30 days, medium within 60 days, and low within 90 days, subject to complexity and scope. We'll keep you informed of progress.
-
-We aim to resolve all vulnerabilities as quickly as possible. The timeline for a fix and disclosure will vary depending on the complexity and severity of the vulnerability. We will keep you informed of our progress throughout the process.
-
+We aim to resolve high severity vulnerabilities within 30 days, medium within
+60 days, and low within 90 days, subject to complexity and scope. We'll keep
+you informed of progress.

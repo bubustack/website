@@ -14,11 +14,14 @@ const roadmapNow = [
 const waysToHelp = [
   'Test the platform on real workloads and open reproducible issues.',
   'Improve docs and examples where onboarding is confusing.',
+  'Help redesign the manager security model without breaking secret propagation.',
   'Build and share Engrams and Impulses.',
   'Contribute testkit, transport adapters, and storage backends.',
 ];
 
 const roadmapNext = [
+  'Manager RBAC redesign — preserve secret propagation and managed runner identity without broad cluster-wide mutation grants.',
+  'Artifact-backed runtime payload delivery — replace env-heavy runtime config with mounted runtime bundles.',
   'Loop primitive — bounded iteration with exit conditions.',
   'Workflow checkpointing — durable execution and restart recovery.',
   'bubu-registry and bubu CLI for publishing/discovery workflows.',

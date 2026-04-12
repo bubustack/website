@@ -17,8 +17,9 @@ we need contributors who want to build something meaningful.
 
 ## How to contribute
 
-1. **Pick something** — Browse [open issues](https://github.com/bubustack/bobrapet/issues)
-   or check the [Roadmap](roadmap.md) for what needs help.
+1. **Pick something** — Browse [operator/runtime issues](https://github.com/bubustack/bobrapet/issues),
+   [website/docs issues](https://github.com/bubustack/website/issues), or check
+   the [Roadmap](roadmap.md) for what needs help.
 2. **Fork & branch** — Work from a feature branch. Keep commits scoped.
 3. **Test** — Add unit and integration tests. Use KinD for operator/transport changes.
 4. **PR** — Reference the issue, include context. Reviews target 2 business days.
@@ -27,7 +28,11 @@ we need contributors who want to build something meaningful.
 
 - **Operator** — Controllers, webhooks, CRDs, reconciliation logic.
 - **Transports** — Bobravoz gRPC and new transport implementations.
-- **SDK** — Go SDK, testing harnesses, new language SDKs.
+- **SDK** — Go SDK, testing harnesses, new language SDKs. The current
+  contributor-ready backlog is tracked in the [Roadmap](roadmap.md#sdk-contributor-backlog-latest-contract-only).
+- **Operator hardening** — Security model cleanup, ownership boundaries, and
+  least-privilege reductions that keep secret propagation and managed runner
+  identities working.
 - **Engrams & Impulses** — New reusable components for the catalog.
 - **Docs & examples** — Tutorials, guides, production runbooks.
 - **Bug fixes** — Triage, reproduce, fix. Always welcome.

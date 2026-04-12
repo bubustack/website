@@ -23,7 +23,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'bubustack',
-  projectName: 'bobrapet',
+  projectName: 'website',
 
   onBrokenLinks: 'throw',
 

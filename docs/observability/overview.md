@@ -152,7 +152,9 @@ Redaction is best-effort and should be combined with secure logging practices.
 
 - Step retry via Bubuilder API (or by patching `StepRun.status.nextRetryAt` if you
   need a low-level/manual workflow).
-- Rerun-from-step by setting `storyrun.bubustack.io/redrive-from-step` on a StoryRun.
+- Rerun-from-step by setting `storyrun.bubustack.io/redrive-from-step` to
+  `<step-name>:<token>` on a StoryRun. The token must change to retrigger the
+  rerun.
 
 ---
 

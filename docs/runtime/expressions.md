@@ -74,7 +74,10 @@ Notes:
 All templating uses Go `text/template` with the Sprig function library. This means:
 
 - Pipes work as in Sprig/Go templates.
-- Missing keys are errors (`missingkey=error`).
+- Validation parses templates with strict missing-key checks (`missingkey=error`).
+- Runtime Go-template execution uses zero values for missing keys (`missingkey=zero`).
+  Direct path lookups still surface clear missing-key or blocked-evaluation
+  errors when upstream data is unavailable.
 - Root names are normalized, so `inputs.foo` and `.inputs.foo` are accepted.
 - Plain strings are not evaluated; use `{{ ... }}` to execute expressions.
 - For step names with dashes, use `steps['name']` in simple path templates or
@@ -122,7 +125,7 @@ Unsupported aliases (rejected by validation):
 | `spec.output` | runtime (StoryRun finalize) | `inputs`, `steps`, `now`, random helpers |
 | `steps[*].runtime` | not supported | - |
 
-### Streaming stories (`spec.pattern: streaming`)
+### Realtime stories (`spec.pattern: realtime`)
 
 | Field | When evaluated | Allowed contexts |
 |---|---|---|
@@ -171,20 +174,25 @@ Behavior is controlled by `templating.offloaded-data-policy`:
 - `error` (default): reject evaluation with a clear error.
 - `inject`: create a "materialize" StepRun/engram to hydrate data and re‑evaluate the template,
   then continue execution when the result is ready.
+- `controller`: resolve the referenced offloaded data in-process on the controller
+  side without creating a materialize StepRun.
 
-When `inject` is enabled, the operator uses `templating.materialize-engram` (commonly set to
-`materialize`) to resolve the template in the same StoryRun namespace.
+When `inject` is enabled, the operator uses `templating.materialize-engram`
+(commonly set to `materialize`) to resolve the template in the same StoryRun
+namespace.
+
+Story authors can also force controller-side hydration for step input templates
+with the annotation `bubustack.io/controller-resolve: "true"`.
 
 ## Templating Configuration
 
 Operator-level limits and behavior are controlled by:
 
 - `templating.evaluation-timeout` (example: `30s`)
-- `templating.max-expression-length` (example: `1000`)
 - `templating.max-output-bytes` (example: `65536`)
 - `templating.deterministic` (`true|false`)
-- `templating.offloaded-data-policy` (`error|inject`)
-- `templating.materialize-engram` (engram name)
+- `templating.offloaded-data-policy` (`error|inject|controller`)
+- `templating.materialize-engram` (engram name; used for `inject`)
 
 ## Validation
 

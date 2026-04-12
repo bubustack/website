@@ -42,7 +42,7 @@ BubuStack admission webhooks require TLS certificates.
 [cert-manager](https://cert-manager.io/) handles provisioning and rotation.
 
 ```bash
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.2/cert-manager.yaml
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.19.4/cert-manager.yaml
 ```
 
 Wait for cert-manager to become ready:
@@ -103,9 +103,17 @@ kubectl get pods -n seaweedfs
 # All pods should be Running/Ready
 ```
 
+This storage backend is part of the runtime contract, not just an optional
+addon. Examples that offload trigger inputs, StoryRun inputs, or large step
+payloads require Bobrapet to keep `controller.storage.*` configured against
+this shared backend.
+
 ## Step 4: Install BubuStack
 
 Install the two core controllers via Helm:
+
+Charts are published in the BubuStack Helm repo and indexed on
+[Artifact Hub](https://artifacthub.io/packages/search?repo=bubustack).
 
 ```bash
 # Add the Helm repo
@@ -113,22 +121,35 @@ helm repo add bubustack https://bubustack.github.io/helm-charts
 helm repo update
 
 # Install the workflow operator
-helm install bobrapet bubustack/bobrapet
+helm install bobrapet bubustack/bobrapet \
+  --namespace bobrapet-system \
+  --create-namespace
 
 # Install the streaming transport hub
-helm install bobravoz-grpc bubustack/bobravoz-grpc
+helm install bobravoz-grpc bubustack/bobravoz-grpc \
+  --namespace bobrapet-system
+```
+
+If you install `bobrapet` with a non-default Helm release name, install
+`bobravoz-grpc` with the matching shared CA issuer:
+
+```bash
+helm install bobravoz-grpc bubustack/bobravoz-grpc \
+  --namespace bobrapet-system \
+  --set sharedCAIssuerName=<bobrapet-release>-bobrapet-shared-ca
 ```
 
 Optionally, install the web console:
 
 ```bash
-helm install bubuilder bubustack/bubuilder
+helm install bubuilder bubustack/bubuilder \
+  --namespace bobrapet-system
 ```
 
 ### Verify controllers are running
 
 ```bash
-kubectl get pods -l app.kubernetes.io/part-of=bubustack
+kubectl get pods -n bobrapet-system
 # bobrapet-controller-manager and bobravoz-grpc-controller-manager should be Running
 ```
 
@@ -141,8 +162,8 @@ kubectl api-resources | grep bubustack
 
 ## Step 5: Deploy an example
 
-Each example in the [examples repository](https://github.com/bubustack/examples)
-follows the same pattern:
+Examples in the [examples repository](https://github.com/bubustack/examples)
+share a common shape, but not every example uses every file:
 
 ```bash
 git clone https://github.com/bubustack/examples.git
@@ -152,38 +173,45 @@ cd examples
 Expected:
 - `examples/batch/` and `examples/realtime/` directories exist.
 
-```
-bootstrap.yaml   Namespace, secrets, RBAC, transport definitions
+```text
+bootstrap.yaml   Namespace plus shared RBAC, transport, or setup resources
+secrets.yaml     User-supplied credentials (often paired with secrets.yaml.example)
 engrams.yaml     Engram instances (component deployments)
+prompts.yaml     Prompt or config maps used by the Story or Engrams
 story.yaml       Workflow definition (DAG of steps)
 impulse.yaml     Trigger (webhook, cron, or Kubernetes event)
+README.md        Example-specific setup, verification, and demo guidance
 ```
 
-### Batch example: GitHub PR Review
+### Batch example: Hello World
 
 ```bash
-cd examples/batch/github-pr-review
-
-# 1. Edit bootstrap.yaml to add your API keys
-#    (OpenAI key, GitHub token)
-
-# 2. Apply in order
-kubectl apply -f bootstrap.yaml
-kubectl apply -f engrams.yaml
-kubectl apply -f story.yaml
-kubectl apply -f impulse.yaml
-```
-
-### Real-time example: Pod Crash Notifier
-
-```bash
-cd examples/realtime/pod-crash-notifier
+cd examples/batch/hello-world
 
 kubectl apply -f bootstrap.yaml
 kubectl apply -f engrams.yaml
 kubectl apply -f story.yaml
+kubectl apply -f storyrun.yaml
+```
+
+### Realtime example: LiveKit Voice Assistant
+
+```bash
+cd examples/realtime/livekit-voice
+
+cp secrets.yaml.example secrets.yaml
+# edit secrets.yaml
+
+kubectl apply -f bootstrap.yaml
+kubectl apply -f secrets.yaml
+kubectl apply -f engrams.yaml
+kubectl apply -f prompts.yaml
+kubectl apply -f story.yaml
 kubectl apply -f impulse.yaml
 ```
+
+Many credentialed examples ship `secrets.yaml.example`; copy it to
+`secrets.yaml` and fill in your credentials before applying.
 
 ### Verify your workflow
 

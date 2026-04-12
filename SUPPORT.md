@@ -5,16 +5,26 @@ Thank you for using BubuStack. Here's how you can get help.
 ## Self-Service
 
 - **Documentation**: https://bubustack.io/docs
-- **Examples**: https://github.com/bubustack/examples
 - **Roadmap**: https://bubustack.io/docs/community/roadmap
+- **Examples**: https://github.com/bubustack/examples
 
 ## Community support
 
-For questions, discussions, and community support:
+Use the repo that owns the problem:
 
-- **GitHub Issues**: For bug reports and feature requests: https://github.com/bubustack/bobrapet/issues
-- **GitHub Discussions**: For general questions: https://github.com/orgs/bubustack/discussions
-- **Discord**: https://discord.gg/dysrB7D8H6
+| Area | Primary repo / channel |
+| --- | --- |
+| Website/docs issues | https://github.com/bubustack/website/issues |
+| Workflow operator, CRDs, controllers, webhooks | https://github.com/bubustack/bobrapet/issues |
+| Streaming hub, connector injection, transport topology | https://github.com/bubustack/bobravoz-grpc/issues |
+| SDK behavior and runtime helper APIs | https://github.com/bubustack/bubu-sdk-go/issues |
+| Shared contracts, templating, transport envelopes | https://github.com/bubustack/core/issues |
+| Protobuf contracts and generated bindings | https://github.com/bubustack/tractatus/issues |
+| General questions and design discussions | https://github.com/orgs/bubustack/discussions |
+| Community chat | https://discord.gg/dysrB7D8H6 |
+
+If you're unsure where something belongs, start in GitHub Discussions and link
+the relevant repo context.
 
 ### Triage and response SLAs (best effort)
 
@@ -24,7 +34,9 @@ For questions, discussions, and community support:
 
 ### Supported versions
 
-- We generally support the latest minor release and the previous minor release of the operator.
+- We support the latest released line of each BubuStack component. Check the
+  owning repository's `SECURITY.md`, release notes, and CI matrix for exact
+  support windows.
 - Kubernetes compatibility target: N-2 upstream stable releases.
 
 ## Reporting security vulnerabilities

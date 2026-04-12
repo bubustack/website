@@ -9,6 +9,10 @@ installation wires the ConfigMap referenced by the `--config-namespace` and
 `--config-name` flags, and the sample values live in
 `config/manager/operator-config.yaml`.
 
+This page covers the main workflow operator, `bobrapet`. For the streaming hub
+and connector operator, see
+[Bobravoz gRPC Configuration](bobravoz-grpc-configuration.md).
+
 ## Who this is for
 
 - Platform engineers operating the BubuStack controller.
@@ -18,7 +22,7 @@ installation wires the ConfigMap referenced by the `--config-namespace` and
 
 - Where configuration lives and how it is loaded.
 - The precedence rules for overrides.
-- A complete list of supported config keys and defaults.
+- A complete list of supported config keys and shipped defaults from the checked-in ConfigMap.
 
 Only the keys listed here are consumed by the controller. Unknown keys are
 ignored.
@@ -40,7 +44,9 @@ not sourced from the ConfigMap and are not overridden by it.
 
 If the operator ConfigMap does not exist at startup, the controller continues
 with built-in defaults from `DefaultOperatorConfig` (which uses
-`DefaultControllerConfig`).
+`DefaultControllerConfig`). The tables below document the shipped ConfigMap
+defaults from `config/manager/operator-config.yaml`. Where the in-process
+fallback differs, this page calls that out explicitly.
 
 ---
 
@@ -48,6 +54,10 @@ with built-in defaults from `DefaultOperatorConfig` (which uses
 
 These settings are read at process start from flags and environment variables.
 They are not part of the operator ConfigMap.
+
+The table below shows the raw binary defaults. When installed from the Helm
+chart, these are rendered to the release namespace and the release-scoped
+ConfigMap name (`<release>-operator-config`).
 
 | Flag / Env | Default | Purpose |
 | --- | --- | --- |
@@ -105,10 +115,10 @@ Priority aging can be enabled per queue to prevent starvation.
 | Key | Default | Purpose | Why it exists |
 | --- | --- | --- | --- |
 | `controller.max-concurrent-reconciles` | `10` | Global reconcile worker cap (fallback for per-controller zeros). | Prevents runaway reconcile fan-out. |
-| `controller.requeue-base-delay` | `0` (uses per-controller defaults) | Base delay for exponential requeue backoff. | Avoids hot loops during transient failures. |
+| `controller.requeue-base-delay` | `2s` | Base delay for exponential requeue backoff. | Avoids hot loops during transient failures. |
 | `controller.requeue-max-delay` | `0` (uses per-controller defaults) | Maximum requeue backoff delay. | Keeps retries bounded in time. |
 | `controller.cleanup-interval` | `1h` | Interval for background cleanup loops. | Prevents GC from running too often. |
-| `controller.reconcile-timeout` | `30s` | Deadline for a single reconcile loop (`0` disables the deadline). | Guards against stuck reconciles. |
+| `controller.reconcile-timeout` | `1m` | Deadline for a single reconcile loop (`0` disables the deadline). | Guards against stuck reconciles. |
 | `controller.max-story-with-block-size-bytes` | `65536` | Upper bound for Story `with` block size. | Protects etcd and API server memory. |
 
 ---
@@ -136,10 +146,10 @@ Priority aging can be enabled per queue to prevent starvation.
 | Key | Default | Purpose | Why it exists |
 | --- | --- | --- | --- |
 | `retry.max-retries` | `3` | Default retry limit for StepRuns. | Balances resilience vs load. |
-| `timeout.default-step` | `30m` | Default step timeout when not specified. | Prevents infinite execution. |
-| `timeout.approval-default` | inherits `timeout.default-step` | Default approval timeout for gate steps. | Avoids stale approval waits. |
-| `timeout.external-data-default` | inherits `timeout.default-step` | Timeout for external data access. | Bounds waiting on external systems. |
-| `timeout.conditional-default` | inherits `timeout.default-step` | Timeout for conditional evaluation. | Prevents stuck conditional loops. |
+| `timeout.default-step` | `5m` | Default step timeout when not specified. | Prevents infinite execution. |
+| `timeout.approval-default` | `24h` | Default approval timeout for gate steps. | Avoids stale approval waits. |
+| `timeout.external-data-default` | `30m` | Timeout for external data access. | Bounds waiting on external systems. |
+| `timeout.conditional-default` | `10m` | Timeout for conditional evaluation. | Prevents stuck conditional loops. |
 
 ---
 
@@ -147,13 +157,13 @@ Priority aging can be enabled per queue to prevent starvation.
 
 | Key | Default | Purpose | Why it exists |
 | --- | --- | --- | --- |
-| `security.run-as-non-root` | `false` | Forces workloads to run as non-root. | Reduces privilege risk. |
-| `security.read-only-root-filesystem` | `false` | Mounts root filesystem as read-only. | Limits write surface in containers. |
+| `security.run-as-non-root` | `true` | Forces workloads to run as non-root. | Reduces privilege risk. |
+| `security.read-only-root-filesystem` | `true` | Mounts root filesystem as read-only. | Limits write surface in containers. |
 | `security.allow-privilege-escalation` | `false` | Disables privilege escalation. | Blocks common container escapes. |
 | `security.drop-capabilities` | `ALL` | Linux capabilities to drop. | Minimizes kernel attack surface. |
-| `security.run-as-user` | `0` | Default UID for workloads. | Allows a cluster-wide UID baseline (0 means root). |
+| `security.run-as-user` | `1000` | Default UID for workloads. | Allows a cluster-wide UID baseline. |
 | `security.automount-service-account-token` | `false` | Default SA token mount toggle. | Reduces token exposure. |
-| `security.service-account-name` | `default` | Default ServiceAccount name. | Ensures predictable identity. |
+| `security.service-account-name` | empty | Default ServiceAccount name. | Leaves workload identity unset unless a controller or resource override resolves one. |
 
 ---
 
@@ -202,7 +212,7 @@ Priority aging can be enabled per queue to prevent starvation.
 | `telemetry.trace-propagation` | `false` | Controls trace propagation. | Keeps distributed traces consistent. |
 | `debug.enable-verbose-logging` | `false` | Increases log verbosity. | Useful for diagnostics. |
 | `debug.enable-step-output-logging` | `false` | Logs step outputs. | Debugging with caution for sensitive data. |
-| `debug.enable-metrics` | `false` | Metrics collection toggle. | Allows runtime visibility. |
+| `debug.enable-metrics` | `true` | Metrics collection toggle. | Allows runtime visibility. |
 
 **Note:** `debug.enable-metrics` controls metric emission in the operator. The metrics *endpoint* is controlled by the manager flags (`--metrics-bind-address`, `--metrics-secure`) in `bobrapet/cmd/main.go`.
 
@@ -272,6 +282,7 @@ export OTEL_SERVICE_NAME=bobrapet-operator
 | `engram.default-grpc-port` | `50051` | Default gRPC port. | Ensures consistent connectivity. |
 | `engram.default-grpc-heartbeat-interval-seconds` | `10` | Default gRPC heartbeat interval. | Detects disconnected clients. |
 | `engram.default-storage-timeout-seconds` | `300` | Default storage timeout. | Bounds remote storage calls. |
+| `engram.default-max-recursion-depth` | `32` | Default recursion budget for hydration/dehydration of nested payloads. | Prevents runaway recursion while allowing deeply nested documents such as full Kubernetes objects. |
 | `engram.default-graceful-shutdown-timeout-seconds` | `20` | Default graceful shutdown timeout. | Allows orderly shutdown. |
 | `engram.default-termination-grace-period-seconds` | `30` | Pod termination grace period. | Allows cleanup on shutdown. |
 | `engram.default-max-recv-msg-bytes` | `10485760` | Max gRPC receive size. | Prevents oversized messages. |
@@ -281,8 +292,12 @@ export OTEL_SERVICE_NAME=bobrapet-operator
 | `engram.default-reconnect-max-retries` | `10` | Max gRPC reconnect retries. | Prevents infinite reconnect loops. |
 | `engram.default-reconnect-base-backoff-millis` | `500` | Base backoff for reconnect. | Spreads reconnection attempts. |
 | `engram.default-reconnect-max-backoff-seconds` | `30` | Max backoff for reconnect. | Bounds wait time. |
-| `engram.default-hang-timeout-seconds` | `0` | Hang detection timeout. | Surfaces stalled connections. |
+| `engram.default-hang-timeout-seconds` | `30` | Hang detection timeout. | Surfaces stalled connections. |
 | `engram.default-message-timeout-seconds` | `30` | Message timeout for gRPC calls. | Prevents stuck calls. |
+
+The global recursion budget can be overridden per Story with
+`spec.policy.execution.maxRecursionDepth` when a workflow intentionally passes
+deeply nested payloads through shared storage.
 
 ---
 
@@ -290,14 +305,25 @@ export OTEL_SERVICE_NAME=bobrapet-operator
 
 | Key | Default | Purpose | Why it exists |
 | --- | --- | --- | --- |
-| `controller.storage.provider` | empty | Default storage backend. | Ensures a known storage target. |
-| `controller.storage.s3.bucket` | empty | Default S3 bucket name. | Centralizes storage location. |
-| `controller.storage.s3.region` | empty | Default S3 region. | Required for AWS-compatible SDKs. |
-| `controller.storage.s3.endpoint` | empty | S3 endpoint override. | Supports non-AWS S3 backends. |
-| `controller.storage.s3.use-path-style` | `false` | Path-style addressing toggle. | Required by some S3-compatible stores. |
+| `controller.storage.provider` | `s3` | Default storage backend. | Ensures a known storage target. |
+| `controller.storage.s3.bucket` | `bubu-default` | Default S3 bucket name. | Centralizes storage location. |
+| `controller.storage.s3.region` | `us-east-1` | Default S3 region. | Required for AWS-compatible SDKs. |
+| `controller.storage.s3.endpoint` | `http://seaweedfs-s3.seaweedfs:8333` | S3 endpoint override. | Supports non-AWS S3 backends. |
+| `controller.storage.s3.use-path-style` | `true` | Path-style addressing toggle. | Required by some S3-compatible stores. |
 | `controller.storage.s3.auth-secret-name` | empty | Secret with S3 credentials. | Centralizes credential lookup. |
 | `controller.storage.file.path` | empty | Default file storage path inside workload. | Required for file-backed storage. |
 | `controller.storage.file.volume-claim-name` | empty | Default RWX PVC name for file storage. | Enables shared file storage across workloads. |
+
+These keys affect more than step output offloading. They are also required when
+SDK helpers offload oversized trigger or StoryRun inputs, and when the
+controller later hydrates offloaded refs during template evaluation or StepRun
+input resolution. If `controller.storage.*` is unset, oversized trigger/input
+submissions will fail even if an S3-compatible service exists in the cluster.
+
+They are also required when the `StoryTrigger` controller resolves an accepted
+trigger request into a `StoryRun` whose inputs exceed
+`storyrun.max-inline-inputs-size`. In that case the controller offloads
+`StoryRun.spec.inputs` before create, using the same shared storage backend.
 
 ---
 

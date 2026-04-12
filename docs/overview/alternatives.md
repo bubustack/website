@@ -4,7 +4,7 @@ description: Fact-based comparison of BubuStack with adjacent workflow and orche
 ---
 # Alternatives and Tradeoffs
 
-_As of March 25, 2026. Source links included. No speculative claims._
+_As of March 29, 2026. Source links included. No speculative claims._
 
 | Topic | BubuStack | Temporal | Argo Workflows | n8n | Prefect | Windmill |
 | --- | --- | --- | --- | --- | --- | --- |

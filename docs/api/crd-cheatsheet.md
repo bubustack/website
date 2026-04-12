@@ -9,15 +9,19 @@ Use this page as a fast index before diving into full CRD details.
 ## Most-used resources
 
 - `Story`
+- `StoryTrigger`
 - `StoryRun`
 - `StepRun`
+- `EffectClaim`
 - `Engram`
 - `Impulse`
 
 ## Most-used fields
 
 - `spec.steps[]`
+- `spec.deliveryIdentity`
 - `spec.policy`
+- `status.decision`
 - `status.phase`
 - `status.error`
 

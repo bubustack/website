@@ -250,8 +250,15 @@ spec:
 
 ## Defaults and behavior
 
+- Default delivery is `ordering=none`, `semantics=best_effort`, and `replay.mode=none`.
 - `at_least_once` semantics imply `per_stream` ordering if not explicitly set.
 - Replay modes automatically enable at-least-once semantics.
+- Only ordered or `at_least_once` traffic receives hub-assigned transport sequence numbers.
+- Unsequenced best-effort traffic is not transport-deduped unless it carries an
+  explicit message ID.
+- For sequenced traffic, the SDK emits the delivery receipt only after the
+  downstream Engram marks the inbound message complete. If reconnect happens
+  first, the packet can be replayed.
 - If `replay.mode` is set and `checkpointInterval` is omitted, the hub uses a default checkpoint interval.
 - Buffer thresholds are interpreted as utilization percentages (0..100).
 - `routing.fanOut=parallel` dispatches downstream engram deliveries concurrently.
@@ -259,7 +266,7 @@ spec:
 - Routing rules are evaluated per downstream step; deny rules override allow rules.
 - If any `allow` rules exist, routing becomes an allowlist (only allowed targets route).
 - `lifecycle.drainTimeoutSeconds` is enforced when `strategy` is `drain_cutover` or `blue_green` (and also when a drain timeout is set without an explicit strategy).
-- When drain mode is enabled, the hub issues `flowControl.pause` while buffering for reconnect/cutover and resumes once buffers drain.
+- When drain mode is enabled, the hub sends `FlowControl.signal=PAUSE` while buffering for reconnect/cutover and `FlowControl.signal=RESUME` once buffers drain.
 - `partitioning.mode=hash` uses the configured key to select `partition` in the stream envelope.
 - `recording` writes JSON payloads to the configured storage backend; retention enforcement is backend-dependent.
 - Lane caps apply per downstream stream buffer and are enforced before global buffer caps.

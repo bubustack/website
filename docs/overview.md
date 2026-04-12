@@ -34,11 +34,13 @@ The SDK ([bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go)) is **libc**: i
 | Resource | Scope | Purpose |
 | --- | --- | --- |
 | **Story** | Namespaced | Declarative workflow definition (DAG of steps, policies, schemas) |
+| **StoryTrigger** | Namespaced | Durable admission request for external trigger delivery |
 | **StoryRun** | Namespaced | Concrete execution of a Story with resolved inputs/outputs |
 | **StepRun** | Namespaced | Execution record for a single step within a StoryRun |
+| **EffectClaim** | Namespaced | Durable reservation and completion authority for one step side effect |
 | **Engram** | Namespaced | Configured component instance |
 | **EngramTemplate** | Cluster | Component definition with schemas and runtime contract |
-| **Impulse** | Namespaced | Trigger that launches StoryRuns from external events |
+| **Impulse** | Namespaced | Trigger that submits `StoryTrigger` requests from external events |
 | **ImpulseTemplate** | Cluster | Trigger definition |
 | **Transport** | Cluster | Streaming transport provider configuration |
 | **TransportBinding** | Namespaced | Runtime binding between a step and its transport connector |
@@ -48,7 +50,7 @@ The SDK ([bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go)) is **libc**: i
 | Module | Role |
 | --- | --- |
 | [`tractatus`](https://github.com/bubustack/tractatus) | Protobuf service definitions for gRPC transport |
-| [`core`](https://github.com/bubustack/core) | Shared contracts, templating engine, transport runtime |
+| [`core`](https://github.com/bubustack/core) | Shared contracts, templating engine, transport protocol/env helpers, and connector runtime helpers |
 | [`bobrapet`](https://github.com/bubustack/bobrapet) | Kubernetes operator: CRDs, controllers, webhooks |
 | [`bubu-sdk-go`](https://github.com/bubustack/bubu-sdk-go) | Go SDK for building Engrams and Impulses |
 | [`bobravoz-grpc`](https://github.com/bubustack/bobravoz-grpc) | gRPC streaming transport hub |

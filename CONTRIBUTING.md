@@ -3,8 +3,11 @@
 Thanks for contributing.
 
 This repository contains the public website and docs for BubuStack.
-For operator/runtime code changes, use the relevant project repos:
+For docs/site issues, open an issue or PR here. For operator/runtime code
+changes, use the relevant project repos:
 
+- https://github.com/bubustack/core
+- https://github.com/bubustack/tractatus
 - https://github.com/bubustack/bobrapet
 - https://github.com/bubustack/bubu-sdk-go
 - https://github.com/bubustack/bobravoz-grpc
@@ -44,6 +47,8 @@ If you changed docs content, verify:
 - Claims are factual and source-backed
 - Planned features are clearly labeled as planned
 - Security/contact guidance matches `SECURITY.md` and `CODE_OF_CONDUCT.md`
+- If you changed roadmap or maturity claims, update homepage summary copy in the
+  same PR so the site does not drift
 
 ## Pull requests
 

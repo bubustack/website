@@ -59,7 +59,7 @@ coupling that break when requirements change.
 | Repository | Purpose |
 | --- | --- |
 | [tractatus](https://github.com/bubustack/tractatus) | Protobuf contracts for gRPC transport. |
-| [core](https://github.com/bubustack/core) | Shared runtime contracts, templating engine, transport connector runtime. |
+| [core](https://github.com/bubustack/core) | Shared contracts, templating engine, transport protocol/env helpers, and connector runtime helpers. |
 | [bobrapet](https://github.com/bubustack/bobrapet) | CRDs, controllers, webhooks, and the runtime contract docs. |
 | [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) | Go SDK, testkit, and conformance helpers. |
 | [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) | Streaming transport operator: gRPC hub, topology analysis, connector lifecycle. |
@@ -83,7 +83,7 @@ surface for components. It provides three entry points:
 | --- | --- | --- |
 | `sdk.StartBatch[C, I]` | Finite tasks with clear start/end | Job |
 | `sdk.StartStreaming[C]` | Continuous processing with gRPC bidirectional streaming | Deployment |
-| `sdk.RunImpulse[C]` | Long-running trigger that creates StoryRuns from external events | Deployment |
+| `sdk.RunImpulse[C]` | Long-running trigger that submits durable `StoryTrigger` requests from external events | Deployment |
 
 The SDK also provides:
 
@@ -129,7 +129,8 @@ Engrams process data — they receive inputs, execute logic, and produce outputs
 
 ### Impulses (event triggers)
 
-Impulses trigger workflows — they listen for external events and create StoryRuns.
+Impulses trigger workflows — they listen for external events and submit
+`StoryTrigger` requests that resolve to `StoryRun`s.
 
 | Impulse | Trigger source | Description |
 | --- | --- | --- |
@@ -160,6 +161,13 @@ Streaming components also follow the streaming message contract:
 - [Streaming Contract](../streaming/streaming-contract.md) — Message rules and data flow.
 - [Transport Settings](../streaming/transport-settings.md) — Backpressure, routing, and replay.
 
+The latest structured streaming contract is:
+
+- inbound packets arrive as `engram.InboundMessage` and must be acknowledged with `Done()`
+- structured JSON outputs keep canonical bytes in `Payload` and mirror them into
+  `Binary` with `MimeType: application/json`
+- raw `Binary` without `Payload` is reserved for opaque media or non-JSON blobs
+
 ---
 
 ## Packaging and registry *(planned)*
@@ -177,7 +185,8 @@ the cluster.
 Reliability guarantees are defined in [Durable Semantics](durable-semantics.md).
 Key themes:
 
-- StoryRun and StepRun creation are idempotent when deterministic IDs are used.
+- `StoryTrigger` provides the durable trigger-admission boundary for external events.
+- `EffectClaim` provides the durable reservation authority for cross-process effect execution.
 - Step execution is at-least-once; components must handle retries.
 - Redrive and rerun behavior is driven by annotations and controller logic.
 

@@ -86,7 +86,7 @@ const personas: PersonaCallout[] = [
     highlights: [
       'ConfigMap-based tuning for scheduling, retries, and resources',
       'OpenTelemetry integration for traces and metrics',
-      'Namespace-scoped RBAC and cross-namespace policies',
+      'Managed runner RBAC and guarded cross-namespace policies',
     ],
   },
 ];

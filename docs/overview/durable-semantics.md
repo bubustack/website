@@ -23,45 +23,76 @@ It is a contract for operators, SDK users, and workflow authors.
 
 ## Delivery model (current)
 
-- StoryRun creation is at-least-once by default. If the same external trigger is
-  retried without an idempotency token, multiple StoryRuns may be created.
-- When a trigger token is provided via the [SDK](https://github.com/bubustack/bubu-sdk-go), the SDK derives a deterministic
-  StoryRun name and treats `AlreadyExists` as idempotent when inputs match.
-- Trigger tokens must only be reused with identical inputs; mismatches are rejected.
+- External trigger admission now uses a durable `StoryTrigger` request object.
+  The SDK no longer creates `StoryRun`s directly from the trigger helper path.
+- Each logical submission must reuse the same
+  `StoryTrigger.spec.deliveryIdentity.submissionId` across retries. The
+  controller owns the durable decision and records `Pending`, `Created`,
+  `Reused`, or `Rejected` on `StoryTrigger.status.decision`.
+- When trigger dedupe mode is `token` or `key`, the request identity includes a
+  stable business key plus canonical `inputHash`. Reusing the key with
+  different inputs is rejected.
+- When trigger dedupe mode is `none`, BubuStack is still at-least-once at the
+  event level, but one logical SDK submission chain no longer fans out into
+  multiple `StoryRun`s because retries reuse the same `submissionId`.
 - [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse) can
-  configure delivery behavior (dedupe + retry schedule) via `spec.deliveryPolicy`.
-  The SDK enforces this when BUBU trigger policy environment variables are present.
-- Impulses can throttle trigger submission via `spec.throttle`. The SDK enforces
-  per-pod rate and concurrency limits and records throttled events in
-  `Impulse.status.throttledTriggers` and `Impulse.status.lastThrottled`.
+  configure dedupe, retry, and throttling via `spec.deliveryPolicy` and
+  `spec.throttle`. The SDK enforces the client-side submission behavior and the
+  controller owns the final trigger resolution.
 - StepRun creation is idempotent for [Engram](https://github.com/orgs/bubustack/repositories?q=engram)-backed steps because controllers derive
   deterministic StepRun names from StoryRun name and step name.
 - Step execution is at-least-once. A StepRun may execute multiple times because
   retries and job recreation can re-run the same step.
+- Side-effect reservation uses durable `EffectClaim` objects. The SDK renews,
+  recovers, and completes those claims across workers while mirroring summaries
+  into `StepRun.status.effects`.
+
+Published durability follow-up for this area lives in
+[bubu-sdk-go#68](https://github.com/bubustack/bubu-sdk-go/issues/68),
+[bubu-sdk-go#70](https://github.com/bubustack/bubu-sdk-go/issues/70),
+[bubu-sdk-go#71](https://github.com/bubustack/bubu-sdk-go/issues/71), and
+[RFC #76](https://github.com/orgs/bubustack/discussions/76).
 
 ## Explicit delivery guarantees (current)
 
 The guarantees below are the explicit contract boundaries for BubuStack today.
-If you need stronger guarantees (exactly-once effects), you must use idempotency
-keys and ledgering as described later in this document.
 
+- **Trigger admission**
+  - **Durable per `StoryTrigger` request**. Retries for the same logical
+    submission resolve through one request object.
+  - **At-least-once across distinct events** when no stable business key is
+    supplied.
+  - **Idempotent for identical inputs** when `token` or `key` dedupe mode is
+    used and the same business key + input hash are reused.
 - **StoryRun creation**
-  - **At-least-once** when no trigger token is used.
-  - **Idempotent for identical inputs** when a trigger token is used and the
-    deterministic StoryRun name matches the token-derived name.
+  - Controller-owned and driven from the resolved `StoryTrigger` decision.
 - **StepRun creation**
   - **Idempotent per step** for Engram-backed steps: StepRun names are derived
     deterministically from StoryRun name + step name.
 - **Step execution**
   - **At-least-once**. Retries and Job recreation can re-run the same step.
+- **Effects**
+  - **Single active owner per effect key** via `EffectClaim`.
+  - Completed claims suppress re-execution across workers.
+  - External systems should still use stable business idempotency keys where
+    available to protect against crash-after-side-effect-before-claim-complete
+    windows.
 - **Signals**
   - **Best-effort** delivery. No ordering or replay guarantee unless signal
     sequences are used and persisted in the StepRun status.
 - **Streaming transport** ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc))
   - **Best-effort by default**. When `delivery.semantics=at_least_once` and replay
     is enabled, the hub provides at-least-once delivery with replay on reconnect.
-    In-memory buffers can still drop messages on overflow in best-effort modes.
-    See [Transport Settings](../streaming/transport-settings.md).
+    Completion is tracked when the downstream Engram finishes a packet, not when
+    the SDK first reads it. In-memory buffers can still drop messages on overflow
+    in best-effort modes. See [Transport Settings](../streaming/transport-settings.md).
+
+Published replay and packet-contract hardening for streaming lives in
+[bobravoz-grpc#44](https://github.com/bubustack/bobravoz-grpc/issues/44),
+[bobravoz-grpc#45](https://github.com/bubustack/bobravoz-grpc/issues/45),
+[bubu-sdk-go#73](https://github.com/bubustack/bubu-sdk-go/issues/73),
+[bubu-sdk-go#74](https://github.com/bubustack/bubu-sdk-go/issues/74), and
+[RFC #77](https://github.com/orgs/bubustack/discussions/77).
 
 ---
 
@@ -69,26 +100,31 @@ keys and ledgering as described later in this document.
 
 | Operation | Guarantee | Notes |
 | --- | --- | --- |
-| StoryRun creation (no trigger token) | At-least-once | Retries can create multiple StoryRuns. |
-| StoryRun creation (with trigger token) | Idempotent for identical inputs | Reusing a token with different inputs is rejected. |
+| StoryTrigger submission (`dedupe.mode=none`) | Durable per submission, at-least-once across events | Retries reuse one submission ID; distinct events should use distinct submission IDs. |
+| StoryTrigger submission (`dedupe.mode=token` or `key`) | Idempotent for identical inputs | Reusing the same key with different inputs is rejected. |
+| StoryRun creation | Controller-owned from `StoryTrigger` resolution | Returns `Created`, `Reused`, or `Rejected` through the request object. |
 | StepRun creation (Engram-backed step) | Idempotent per step | Deterministic names prevent duplicate StepRuns for the same step. |
 | Step execution | At-least-once | Retries and job recreation can re-run steps. |
+| Effect execution via `ExecuteEffectOnce` | One active owner per effect key | `EffectClaim` prevents concurrent duplicate execution and supports stale recovery. |
 | Signals | Best-effort | No ordering or replay guarantees. |
-| Streaming transport (default) | Best-effort | At-least-once when delivery semantics + replay are enabled. |
+| Streaming transport (default) | Best-effort | At-least-once when delivery semantics + replay are enabled; replayed sequenced packets are suppressed only after downstream completion. |
 
 ---
 
 ## Trigger delivery policy
 
 [Impulse](https://github.com/orgs/bubustack/repositories?q=impulse) delivery
-policy controls how triggers dedupe and retry StoryRun creation. It is configured
+policy controls how triggers dedupe and retry durable `StoryTrigger`
+submission. It is configured
 on `ImpulseTemplate.spec.deliveryPolicy` and can be overridden per
 `Impulse.spec.deliveryPolicy`.
 
 Dedupe modes:
-- `none`: no deduplication; repeated triggers may create multiple StoryRuns.
-- `token`: a trigger token must be provided; missing tokens are rejected.
-- `key`: the SDK derives a token from `dedupe.keyTemplate` and uses it for idempotency.
+- `none`: no cross-event deduplication; distinct events should use distinct
+  `submissionId` values.
+- `token`: a trigger token must be provided; the SDK uses it as the durable
+  business key.
+- `key`: the SDK derives a durable business key from `dedupe.keyTemplate`.
 
 Key templates are evaluated deterministically with the SDK template engine. The
 template can reference:
@@ -102,13 +138,10 @@ Retry schedule (trigger delivery, not step execution):
 - `maxDelay`: cap for computed delays.
 - `backoff`: `exponential`, `linear`, or `constant`.
 
-Retries are only attempted for retryable Kubernetes API errors. If a trigger
-token is used (explicitly or via `dedupe.keyTemplate`), repeated attempts map to
-the same StoryRun; if inputs differ, the SDK rejects the retry.
-
-When a trigger token is set, the StoryRun must include a trigger input hash
-annotation (`storyrun.bubustack.io/trigger-input-hash`) that matches the inputs.
-The SDK sets this automatically; non-SDK clients must compute and supply it.
+Retries are only attempted for retryable Kubernetes API errors. Repeated
+attempts for the same logical submission reuse the same `StoryTrigger`
+identity. For `token` / `key` modes the controller compares the stable business
+key and canonical `inputHash`; if inputs differ, the request is rejected.
 
 Custom clients that do not use the [SDK](https://github.com/bubustack/bubu-sdk-go)
 must implement the same behavior to respect the policy.
@@ -119,40 +152,41 @@ must implement the same behavior to respect the policy.
 
 - Retries are controlled by StepRun retry policies and can re-execute steps.
 - Trigger delivery retries are separate from StepRun retries and only govern
-  StoryRun creation.
+  `StoryTrigger` submission and controller resolution.
 - Safe retry requires idempotent external side effects or external idempotency keys.
 - Use stable identifiers derived from StoryRun and StepRun identity for idempotency keys.
-- Preserve the original trigger token at the event source and reuse it for retries
-  so replays resolve to the same StoryRun.
+- Preserve the original trigger identity at the event source and reuse it for
+  retries so replays resolve to the same `StoryTrigger` and `StoryRun`.
 
 ---
 
-## Exactly-once via idempotency (explicit model)
+## Effects, idempotency, and `EffectClaim`
 
-BubuStack does **not** provide native exactly-once execution for step side effects.
-Instead, it supports **effectively exactly-once** behavior **only** when you:
+BubuStack now provides a first-class effect reservation authority:
 
-1. Use stable idempotency keys derived from StoryRun/StepRun identity.
-2. Record side effects in a durable ledger (StepRun status or external system).
-3. Make external calls idempotent or transactional using those keys.
+- `EffectClaim` is the durable claim object for one StepRun + effect key
+- `sdk.ExecuteEffectOnce(...)` creates, renews, recovers, and completes that claim
+- `StepRun.status.effects` remains the append-only summary and audit mirror
 
-What “exactly-once” means in BubuStack:
-- **Exactly-once side effects** are achieved **by the caller** using idempotency
-  keys and ledgering. BubuStack provides the identifiers and persistence hooks,
-  but it does not prevent duplicates by itself.
-- **Exactly-once does not apply** to step execution. A step can run multiple
-  times under retry/recreate conditions; only the **effects** can be deduped.
+What this gives you:
 
-Known failure modes / boundaries:
-- Job retries, controller restarts, or kube-apiserver errors can re-run a step.
-- If your external system ignores idempotency keys, duplicate effects can occur.
-- If you emit effects before recording them durably, you can observe duplicates
-  on retry.
+- no concurrent duplicate execution for the same effect key across workers
+- stale reservation recovery after crashed workers
+- renewal for long-running effects so active work is not taken over spuriously
+
+What it does **not** magically guarantee:
+
+- a non-idempotent external system can still duplicate work if a process
+  completes the side effect and crashes before the claim is completed
+- step execution itself remains at-least-once
 
 Recommended pattern:
-1. Generate a stable idempotency key.
-2. Check your effect ledger (or external system) to see if the effect exists.
-3. Write durable state **before** side effects when possible.
+
+1. Generate a stable business idempotency key from StoryRun / StepRun identity.
+2. Use `sdk.ExecuteEffectOnce(...)` for the reservation, renewal, and recovery path.
+3. Pass the same business idempotency key to the external system when it
+   supports it.
+4. Treat `StepRun.status.effects` as the run-history mirror, not the lock.
 
 ---
 
@@ -161,7 +195,7 @@ Recommended pattern:
 The following examples use [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go).
 See [Go SDK](../sdk/go-sdk.md) for the full API reference.
 
-Example: idempotent StoryRun creation with a trigger token.
+Example: durable trigger submission with a stable identity.
 
 ```go
 ctx := sdk.WithTriggerToken(ctx, "source-event-id-123")
@@ -174,12 +208,16 @@ Example: stable idempotency keys for external side effects.
 key := fmt.Sprintf("storyrun/%s/step/%s", run.Name, stepID)
 ```
 
-Example: record side effects in the StepRun ledger.
+Example: reserve and complete an effect once per effect key.
 
 ```go
-if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": id}); err != nil {
-    // Treat as soft failure if you can tolerate missing ledger entries.
+result, already, err := sdk.ExecuteEffectOnce(ctx, "provider.call", func(effectCtx context.Context) (any, error) {
+	return provider.Do(effectCtx, request)
+})
+if errors.Is(err, sdk.ErrEffectAlreadyRecorded) || already {
+	return
 }
+_ = result
 ```
 
 ---
@@ -207,6 +245,10 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
   timers, resets StoryRun status, and re-runs with the same spec/inputs. StoryRun
   spec remains immutable; redrive uses metadata only. The controller records the
   last processed token in `storyrun.bubustack.io/redrive-observed`.
+- Partial rerun-from-step is also annotation-driven: set
+  `storyrun.bubustack.io/redrive-from-step` to `<step-name>:<token>`. The
+  controller records the last processed value in
+  `storyrun.bubustack.io/redrive-from-step-observed`.
 
 ---
 
@@ -224,15 +266,15 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
 
 ## State persistence and history
 
-- Durable state is stored in StoryRun and StepRun status.
+- Durable request and execution state is stored across `StoryTrigger`,
+  `StoryRun`, `StepRun`, and `EffectClaim`.
 - Large payloads are stored via storage references instead of inline status data.
 - There is no durable event history log today; retention is managed by StoryRun
   retention settings and controller cleanup.
 - Status updates are eventually consistent at the object level and follow a
   last-writer-wins model.
 - Operational visibility relies on Kubernetes Events (best-effort, not durable,
-  not replayable). BubuStack does not add new CRDs or persist a workflow event
-  history log.
+  not replayable). BubuStack does not persist a workflow event history log.
 - Resource size guardrails are intentional: signals/effects are bounded lists,
   signal payloads are capped, and large payloads must be offloaded to storage
   refs. Avoid writing large aggregates to status.
@@ -242,13 +284,14 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
 ## Signals and events
 
 - Step-level signals are written to StepRun status and merged into step context.
-- Signal delivery is best-effort. Payloads are capped and may be truncated.
+- Signal delivery is best-effort. `status.signals` stores a compact latest-value summary,
+  not the raw emitted payload.
 - Signal **events** are appended to `status.signalEvents` with a monotonic sequence
   number for replay. The list is bounded; older events may be trimmed.
 - The SDK exposes a replay helper that reads `status.signalEvents` and returns
   events after a given sequence number.
 - Ordering is by `signalEvents[].seq` when available. The `status.signals` map is
-  last-writer-wins and is intended for “latest value” lookups.
+  last-writer-wins and is intended for “latest value” lookups over summarized state.
 - Streaming transport buffers ([bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc)) are in-memory and can drop messages on overflow.
 - Kubernetes Events are used for operational diagnostics (e.g., retries, restarts,
   blocked templates) and should not be treated as a durable signal channel.
@@ -259,8 +302,8 @@ if err := sdk.RecordEffect(ctx, key, "succeeded", map[string]any{"providerId": i
 
 - Write durable state before invoking external side effects when possible.
 - Use idempotency keys derived from StoryRun or StepRun identity for external calls.
-- Record effects in the StepRun `status.effects` ledger (or your own outbox) so retries can
-  detect already-applied side effects.
+- Use `EffectClaim` as the durable reservation / completion authority and treat
+  StepRun `status.effects` as the append-only observability mirror.
 - Prefer transactional outbox patterns or external systems that provide exactly-once
   guarantees when needed.
 - [SDK](https://github.com/bubustack/bubu-sdk-go) helper for effect dedupe:

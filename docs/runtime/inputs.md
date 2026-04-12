@@ -27,6 +27,11 @@ Stories can declare `spec.inputsSchema` as a JSON Schema. The admission webhook:
 The StoryRun controller revalidates resolved inputs at runtime as a safety net
 (for cases where webhooks are bypassed).
 
+Schemas should describe the logical hydrated payload shape, not transport
+wrappers like `$bubuStorageRef`, `$bubuConfigMapRef`, or `$bubuSecretRef`.
+Those wrappers are accepted implicitly at admission time and are resolved before
+runtime validation.
+
 ## StepRun inputs
 
 StepRun inputs are resolved from Story `steps[].with` templates and upstream
@@ -64,9 +69,25 @@ StoryRun inputs are subject to the inline size limit:
 
 - `storyrun.max-inline-inputs-size` (operator config)
 
-For larger payloads, use storage references (see [Payloads](payloads.md)). The
-platform does not auto-offload oversized StoryRun inputs; clients/SDKs must
-offload and pass storage refs.
+For larger payloads, use storage references (see [Payloads](payloads.md)).
+
+- Direct API clients must offload oversized StoryRun inputs themselves and pass
+  storage refs.
+- SDK trigger helpers may offload oversized trigger/input payloads for you, but
+  that only works when Bobrapet is configured with shared storage via
+  `controller.storage.*`.
+- When a `StoryTrigger` resolves into a `StoryRun`, the controller also applies
+  `storyrun.max-inline-inputs-size` and offloads oversized `StoryRun.spec.inputs`
+  before create. That path uses the same shared storage backend.
+
+Installing an S3-compatible service in the cluster is not enough by itself. The
+operator must also be configured to use that backend so it can hydrate and
+resolve offloaded inputs later.
+
+If those offloaded inputs are deeply nested, the controller may also need a
+higher recursion budget. Use the global operator default
+`engram.default-max-recursion-depth`, or raise it per workflow with
+`spec.policy.execution.maxRecursionDepth`.
 
 ## JSON Schema support
 

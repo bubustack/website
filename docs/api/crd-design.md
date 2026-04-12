@@ -43,8 +43,10 @@ workflow model in [Core](../overview/core.md) and the lifecycle details in [Life
 | `bubustack.io` | `Impulse` | Namespaced | Configured instance of an ImpulseTemplate. |
 | `catalog.bubustack.io` | `EngramTemplate` | Cluster | Component definition + schemas + defaults. |
 | `catalog.bubustack.io` | `ImpulseTemplate` | Cluster | Trigger definition + schemas + defaults. |
+| `runs.bubustack.io` | `StoryTrigger` | Namespaced | Durable admission request for external trigger delivery. |
 | `runs.bubustack.io` | `StoryRun` | Namespaced | Execution record of a Story. |
 | `runs.bubustack.io` | `StepRun` | Namespaced | Execution record of a single step. |
+| `runs.bubustack.io` | `EffectClaim` | Namespaced | Durable reservation and completion authority for step side effects. |
 | `transport.bubustack.io` | `Transport` | Cluster | Transport provider definition + settings. |
 | `transport.bubustack.io` | `TransportBinding` | Namespaced | Runtime binding between engram and connector. |
 | `policy.bubustack.io` | `ReferenceGrant` | Namespaced | Cross-namespace reference allowlist. |
@@ -56,14 +58,15 @@ workflow model in [Core](../overview/core.md) and the lifecycle details in [Life
 ```
 EngramTemplate (cluster) -> Engram (namespace)
 ImpulseTemplate (cluster) -> Impulse (namespace)
-Story (namespace) -> StoryRun (namespace) -> StepRun (namespace)
+Story (namespace) -> StoryTrigger (namespace) -> StoryRun (namespace) -> StepRun (namespace)
+StepRun (namespace) -> EffectClaim (namespace)
 Story step -> Engram reference -> EngramTemplate
 Story transports -> Transport -> TransportBinding
 ```
 
 - **Templates** define contracts and defaults.
 - **Instances** (Engram/Impulse) bind a template to real configuration and secrets.
-- **Runs** capture execution outcomes, outputs, retries, and errors.
+- **Runs** capture request admission, execution outcomes, outputs, retries, and errors.
 
 ---
 
@@ -92,6 +95,8 @@ Parallel to Engrams, but oriented around **trigger delivery**:
 
 - `spec.contextSchema` defines the trigger payload structure.
 - `spec.deliveryPolicy` defines dedupe and retry defaults.
+- External trigger admission resolves through `StoryTrigger`, not direct client
+  `StoryRun` creation.
 
 ### Engram transport and TLS
 
@@ -166,9 +171,16 @@ or VPA.
 `Story` defines the workflow graph, dependencies, and defaults:
 
 - `spec.steps[]` define DAG nodes (Engram references or primitives).
-- `spec.pattern` selects batch or streaming execution.
+- `spec.pattern` selects batch or realtime execution.
 - `spec.inputsSchema` and `spec.outputsSchema` define runtime contracts.
 - `spec.policy` defines defaults (timeouts, retry, storage, resources).
+
+Story execution policy can also raise the recursion budget used while hydrating
+offloaded nested inputs and outputs:
+
+- `spec.policy.execution.maxRecursionDepth` overrides the global operator
+  default when a workflow intentionally passes deeply nested objects such as
+  full Kubernetes resources through shared storage.
 
 ### Step
 
@@ -267,12 +279,12 @@ Represents a single step execution. It captures:
 
 | Field | Location | Purpose |
 | --- | --- | --- |
-| `spec.idempotencyKey` | Spec | Stable key used for exactly-once effect tracking. SDK checks this on retry to skip already-committed effects. |
+| `spec.idempotencyKey` | Spec | Stable business key for side effects. The SDK copies it into `EffectClaim.spec.idempotencyKey` when effect helpers are used. |
 | `spec.executionOverrides` | Spec | Per-StepRun resource and job overrides (CPU, memory, backoffLimit, TTL, restartPolicy, debug). |
 | `spec.downstreamTargets` | Spec | gRPC or terminate targets for streaming handoff. Each entry carries an address, optional TLS config, and metadata. |
 | `status.handoff` | Status | Tracks streaming handoff lifecycle (`phase`: none/requested/draining/cutover/ready, plus `connectorID`, `requestedAt`, `completedAt`). |
-| `status.effects` | Status | Append-only ledger of side-effect records (name, key, committedAt, metadata). Used with `idempotencyKey` for exactly-once effect tracking. |
-| `status.signals` | Status | Key-value map of the latest signal state for each named signal (used for inter-step coordination). |
+| `status.effects` | Status | Append-only observability ledger of side-effect records. Durable reservation and completion authority lives in `EffectClaim`, not in StepRun status. |
+| `status.signals` | Status | Key-value map of the latest summarized signal state for each named signal. Raw payload bytes are not persisted there. |
 | `status.signalEvents` | Status | Ordered log of signal events with monotonic `seq` numbers. The SDK replays these on reconnect to restore signal state. |
 | `status.needs` | Status | Resolved dependency statuses from upstream steps. |
 
@@ -405,7 +417,7 @@ metadata:
   name: realtime-transcribe
   namespace: workflows
 spec:
-  pattern: streaming
+  pattern: realtime
   inputsSchema:
     type: object
     properties:
@@ -440,6 +452,26 @@ spec:
     language: "en"
 ```
 
+### StoryTrigger (`runs.bubustack.io/v1alpha1`)
+
+```yaml
+apiVersion: runs.bubustack.io/v1alpha1
+kind: StoryTrigger
+metadata:
+  name: realtime-transcribe-trigger-1234abcd5678ef90
+  namespace: workflows
+spec:
+  storyRef:
+    name: realtime-transcribe
+  deliveryIdentity:
+    mode: token
+    key: participant:room-123:user-42
+    inputHash: 4f530b2d9b7fce9bc9f0dd0f7fd0d7f47b4f0ab6d7bcf9c5880aa9d75ab0d9b6
+    submissionId: room-123-user-42
+  inputs:
+    language: "en"
+```
+
 ### StepRun (`runs.bubustack.io/v1alpha1`)
 
 ```yaml
@@ -461,6 +493,24 @@ spec:
     maxRetries: 2
     delay: "5s"
     backoff: exponential
+```
+
+### EffectClaim (`runs.bubustack.io/v1alpha1`)
+
+```yaml
+apiVersion: runs.bubustack.io/v1alpha1
+kind: EffectClaim
+metadata:
+  name: realtime-transcribe-001-transcribe-eff-1234abcd5678ef90
+  namespace: workflows
+spec:
+  stepRunRef:
+    name: realtime-transcribe-001-transcribe
+    uid: 11111111-2222-3333-4444-555555555555
+  effectKey: provider.call
+  idempotencyKey: storyrun/realtime-transcribe-001/step/transcribe/provider.call
+  holderIdentity: pod/realtime-transcribe-0
+  leaseDurationSeconds: 600
 ```
 
 ### Transport (`transport.bubustack.io/v1alpha1`)
@@ -541,9 +591,11 @@ spec:
 | ImpulseTemplate | `status.conditions`, `status.usageCount` | `status.validationStatus`, `status.validationErrors` |
 | Engram | `status.conditions`, `status.phase`, `status.replicas`, `status.triggers` | `status.validationStatus`, `status.validationErrors` |
 | Impulse | `status.conditions`, `status.phase`, `status.triggersReceived`, `status.storiesLaunched` | none (validation is admission-only) |
+| StoryTrigger | `status.conditions`, `status.decision`, `status.storyRunRef`, `status.completedAt` | admission webhook validates deterministic request identity |
 | Story | `status.conditions`, `status.stepsTotal`, `status.transports`, `status.triggers` | `status.validationStatus`, `status.validationErrors` |
 | StoryRun | `status.conditions`, `status.phase`, `status.active`, `status.completed`, `status.error` | none (schema refs recorded in status) |
 | StepRun | `status.conditions`, `status.phase`, `status.exitClass`, `status.retries`, `status.error` | none (schema refs recorded in status) |
+| EffectClaim | `status.conditions`, `status.phase` | admission webhook validates deterministic claim identity |
 | Transport | `status.conditions`, `status.availableAudio`, `status.availableVideo`, `status.availableBinary` | `status.validationStatus`, `status.validationErrors` |
 | TransportBinding | `status.conditions`, `status.endpoint`, `status.negotiatedAudio`, `status.negotiatedVideo`, `status.negotiatedBinary` | none |
 | ReferenceGrant | `status.conditions` | none |
@@ -559,12 +611,14 @@ spec:
 - `status.usageCount`: approximate count of downstream references (templates/engram/story).
 - `status.triggers`: aggregate counter of run references (story/engram).
 - `status.triggersReceived`: total events seen by an Impulse.
-- `status.storiesLaunched`: total StoryRuns successfully started by an Impulse.
+- `status.storiesLaunched`: total `StoryTrigger` requests that resolved to created or reused `StoryRun`s for an Impulse.
+- `status.decision`: controller-owned durable admission result on `StoryTrigger`.
 - `status.stepsTotal` / `status.stepsComplete` / `status.stepsFailed` / `status.stepsSkipped`: StoryRun progress summary.
 - `status.active` / `status.completed`: StoryRun active or completed step names.
 - `status.error`: structured error payload for StoryRun/StepRun failures.
 - `status.exitClass`: StepRun exit interpretation (success/retry/terminal/rateLimited).
 - `status.retries` / `status.nextRetryAt`: retry counter and next scheduled retry time for StepRun.
+- `status.phase` on `EffectClaim`: canonical reservation/completion summary (`Reserved`, `Completed`, `Released`, `Abandoned`).
 - `status.inputSchemaRef` / `status.outputSchemaRef`: resolved schema identifiers used at runtime.
 - `status.endpoint`: TransportBinding resolved connector endpoint.
 - `status.negotiatedAudio` / `status.negotiatedVideo` / `status.negotiatedBinary`: selected transport codecs/MIME types.
@@ -641,11 +695,13 @@ resource’s lifecycle and the status fields you should expect it to update.
 | ImpulseTemplate | `internal/controller/catalog/impulsetemplate_controller.go` | Validates required fields, supported modes (deployment/statefulset), context/config schemas, computes usage count. | `status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.observedGeneration` |
 | Engram | `internal/controller/engram_controller.go` | Resolves template ref, computes Story usage + StepRun trigger counts, emits validation conditions. | `status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.triggers`, `status.observedGeneration` |
 | Impulse | `internal/controller/impulse_controller.go` | Resolves template + Story, reconciles workload + Service/SA/RBAC, aggregates trigger stats from StoryRuns. | `status.phase`, `status.conditions`, `status.replicas`, `status.readyReplicas`, `status.triggersReceived`, `status.storiesLaunched`, `status.failedTriggers`, `status.lastTrigger`, `status.lastSuccess`, `status.observedGeneration` |
+| StoryTrigger | `internal/controller/runs/storytrigger_controller.go` | Owns durable trigger admission, creates or reuses StoryRuns, records `Created` / `Reused` / `Rejected`. | `status.decision`, `status.reason`, `status.message`, `status.storyRunRef`, `status.conditions`, `status.acceptedAt`, `status.completedAt`, `status.observedGeneration` |
 | Story | `internal/controller/story_controller.go` | Validates references, computes usage + trigger counts, writes transport summary. | `status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.triggers`, `status.transports`, `status.stepsTotal` |
 | StoryRun | `internal/controller/runs/storyrun_controller.go` | Validates inputs, orchestrates DAG, creates StepRuns, handles redrive, records schema refs. | `status.phase`, `status.conditions`, `status.active`, `status.completed`, `status.output`, `status.error`, `status.inputSchemaRef`, `status.outputSchemaRef` |
 | StepRun | `internal/controller/runs/steprun_controller.go` | Executes step workloads, validates inputs/outputs, manages retries, records exit info + schema refs. | `status.phase`, `status.exitClass`, `status.exitCode`, `status.retries`, `status.nextRetryAt`, `status.output`, `status.error`, `status.inputSchemaRef`, `status.outputSchemaRef` |
-| Transport | `internal/controller/transport/transport_controller.go` | Scaffolded controller (no reconcile logic yet). | Status fields are not automatically populated yet. |
-| TransportBinding | `internal/controller/transport/transportbinding_controller.go` | Scaffolded controller (no reconcile logic yet). | Status fields are not automatically populated yet. |
+| EffectClaim | `internal/controller/runs/effectclaim_controller.go` | Canonicalizes claim phase, stamps owner refs, and cleans orphaned or UID-drifted claims. | `status.phase`, `status.conditions`, `status.observedGeneration` |
+| Transport | `internal/controller/transport_controller.go` | Validates the Transport spec, counts Story usage, aggregates TransportBinding capability/heartbeat data, and patches status. | `status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.availableAudio`, `status.availableVideo`, `status.availableBinary`, `status.pendingBindings`, `status.lastHeartbeatTime`, `status.observedGeneration` |
+| TransportBinding | StepRun reconciler + Bobravoz connector reporter | Bobrapet creates and updates binding spec from StepRuns; Bobravoz connectors patch negotiated codecs, endpoints, and readiness into status. | `status.negotiatedAudio`, `status.negotiatedVideo`, `status.negotiatedBinary`, `status.endpoint`, `status.downstreamHost`, `status.upstreamHost`, `status.conditions`, `status.observedGeneration` |
 | ReferenceGrant | none (resolved at validation time) | Cross-namespace checks via admission and controller reference resolution. | `status.conditions` only when/if a controller writes it. |
 
 ---
@@ -654,10 +710,10 @@ resource’s lifecycle and the status fields you should expect it to update.
 
 - Template validation failures: check `EngramTemplate` / `ImpulseTemplate` status and controller logs (`engramtemplate`, `impulsetemplate`).
 - Engram/Story reference errors: check `Engram` / `Story` status validation + controller logs (`engram`, `story`).
-- Trigger counters not moving: check `StoryRun` status trigger tokens and Impulse/Story aggregation (`impulse`, `story`).
+- Trigger counters not moving: check `StoryTrigger` decisions and Impulse/Story aggregation (`storytrigger`, `impulse`, `story`).
 - StoryRun stuck: check `StoryRun` status phase + conditions; inspect DAG/StepRun creation (`storyrun`).
 - StepRun failures: check `StepRun.status.exitClass`, `status.error`, and retry metadata (`steprun`).
-- Transport binding empty status: transport controllers are currently scaffolded; status is not reconciled yet.
+- Transport binding empty status: check Bobravoz connector logs and the binding status reporter path; TransportBinding status is not written by a dedicated Bobrapet reconciler.
 
 ---
 
@@ -670,13 +726,16 @@ resource’s lifecycle and the status fields you should expect it to update.
 | `Engram.status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.triggers` | Engram controller | `internal/controller/engram_controller.go` |
 | `Story.status.validationStatus`, `status.validationErrors`, `status.conditions`, `status.usageCount`, `status.triggers`, `status.transports` | Story controller | `internal/controller/story_controller.go` |
 | `Impulse.status.phase`, `status.conditions`, `status.replicas`, `status.readyReplicas` | Impulse controller | `internal/controller/impulse_controller.go`, `pkg/runs/status/impulse.go` |
-| `Impulse.status.triggersReceived`, `status.storiesLaunched`, `status.failedTriggers`, `status.lastTrigger`, `status.lastSuccess` | Impulse controller (aggregated from StoryRuns) | `pkg/runs/status/impulse_stats.go` |
+| `Impulse.status.triggersReceived`, `status.storiesLaunched`, `status.failedTriggers`, `status.lastTrigger`, `status.lastSuccess` | Impulse controller (aggregated from resolved trigger activity) | `pkg/runs/status/impulse_stats.go` |
+| `StoryTrigger.status.decision`, `status.storyRunRef`, `status.conditions` | StoryTrigger controller | `internal/controller/runs/storytrigger_controller.go` |
 | `StoryRun.status.phase`, `status.conditions`, `status.startedAt`, `status.finishedAt`, `status.duration`, `status.attempts`, `status.triggerTokens` | StoryRun controller | `pkg/runs/status/storyrun.go` |
 | `StoryRun.status.inputSchemaRef`, `status.outputSchemaRef` | StoryRun controller | `internal/controller/runs/storyrun_controller.go` |
 | `StepRun.status.phase`, `status.conditions`, `status.startedAt`, `status.finishedAt`, `status.duration`, `status.lastFailureMsg` | StepRun controller | `pkg/runs/status/steprun.go` |
-| `StepRun.status.exitClass`, `status.exitCode`, `status.retries`, `status.nextRetryAt`, `status.output`, `status.error` | StepRun controller | `internal/controller/runs/steprun_controller.go` |
+| `StepRun.status.exitClass`, `status.exitCode`, `status.retries`, `status.nextRetryAt`, `status.output`, `status.error`, `status.effects` | StepRun controller | `internal/controller/runs/steprun_controller.go` |
+| `EffectClaim.status.phase`, `status.conditions` | EffectClaim controller | `internal/controller/runs/effectclaim_controller.go` |
 | `StepRun.status.inputSchemaRef`, `status.outputSchemaRef` | StepRun controller | `internal/controller/runs/steprun_controller.go` |
-| `Transport.status.*`, `TransportBinding.status.*` | Not reconciled yet | `internal/controller/transport/transport_controller.go`, `internal/controller/transport/transportbinding_controller.go` |
+| `Transport.status.*` | Transport controller | `internal/controller/transport_controller.go`, `pkg/transport/aggregate.go` |
+| `TransportBinding.status.*` | Bobravoz connector reporter (plus spec ownership from StepRun reconciler) | `bobravoz-grpc/pkg/metrics/connector_metrics.go`, `internal/controller/runs/steprun_controller.go` |
 
 ---
 
@@ -732,9 +791,9 @@ kubectl logs -n <namespace> pod/$POD
 
 ### Trigger counters not moving
 
-1. Confirm StoryRun trigger tokens are being stamped.
+1. Confirm `StoryTrigger.status.decision` and `status.storyRunRef` are progressing.
 ```bash
-kubectl get storyrun <name> -n <namespace> -o jsonpath='{.status.triggerTokens}'
+kubectl get storytrigger <name> -n <namespace> -o yaml
 ```
 2. Compare Story and Impulse aggregated counters.
 ```bash
@@ -800,7 +859,7 @@ metadata:
   name: realtime-intent
   namespace: workflows
 spec:
-  pattern: streaming
+  pattern: realtime
   inputsSchema:
     type: object
     properties:

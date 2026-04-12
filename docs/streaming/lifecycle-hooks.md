@@ -82,33 +82,48 @@ arrives, ensuring the full pipeline is online before the greeting fires.
 
 ## Hook packet structure
 
-Hooks are delivered as standard streaming packets with an Envelope of kind
-`hook`. The packet fields available in expressions:
+Hooks are delivered as standard streaming packets. On the wire they are regular
+`DataPacket` values whose metadata marks them as hooks (`kind=hook`,
+`type=<event>`, `hook.event`, `hook.source`) and whose structured payload
+contains the hook object. The packet fields available in expressions:
 
 | Field | Value | Description |
 |-------|-------|-------------|
+| `packet.kind` | `"hook"` | The hook packet kind marker. |
 | `packet.type` | `"storyrun.ready"` or `"steprun.ready"` | The hook event name. |
 | `packet.identity` | Varies | Participant identity from routing metadata. |
 | `packet.text` | `""` | Empty for hooks (no signal data). |
 | `packet.history` | `""` | Empty for hooks. |
 
-### Wire format (Envelope)
+### Wire format (`DataPacket`)
 
-On the wire, hooks are encoded as a `StreamEnvelope` inside a `DataPacket`:
+On the wire, hooks are regular `DataPacket` payloads. The hub also copies
+StoryRun and destination-step routing metadata into `metadata`; the example
+below keeps only the hook-specific fields for clarity:
 
 ```json
 {
-  "kind": "hook",
-  "type": "storyrun.ready",
-  "hook": {
-    "version": "v1",
-    "event": "storyrun.ready",
+  "metadata": {
     "source": "hub",
-    "data": {
-      "timestamp": "2026-03-08T12:00:00Z",
-      "storyRun": {
-        "name": "my-story-run-abc",
-        "namespace": "default"
+    "provider": "hub",
+    "kind": "hook",
+    "type": "storyrun.ready",
+    "hook.event": "storyrun.ready",
+    "hook.source": "hub"
+  },
+  "payload": {
+    "kind": "hook",
+    "type": "storyrun.ready",
+    "hook": {
+      "version": "v1",
+      "event": "storyrun.ready",
+      "source": "hub",
+      "data": {
+        "timestamp": "2026-03-08T12:00:00Z",
+        "storyRun": {
+          "name": "my-story-run-abc",
+          "namespace": "default"
+        }
       }
     }
   }
@@ -164,7 +179,8 @@ given key, it will not fire again for the lifetime of that StoryRun session.
 ## Debugging hooks
 
 - **Hook not firing**: Verify that all streaming steps have connected (for
-  `storyrun.ready`). Check the hub logs for `"emitting lifecycle hook"` entries.
+  `storyrun.ready`). Check the hub logs for `"Lifecycle hook delivered"` or
+  `"Lifecycle hook delivery failed"` entries.
 - **Step not receiving hook**: Verify the step's `if` condition matches the hook
   event name. The match is case-insensitive substring, so
   `{{ eq (default "" packet.type) "storyrun.ready" }}` works.

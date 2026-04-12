@@ -1,6 +1,6 @@
 ---
 title: Streaming Contract
-description: Message validity, ordering, replay, and control directives.
+description: Message validity, ordering, replay, and control-stream behavior.
 ---
 # Streaming Contract (Engrams + Connectors)
 
@@ -21,14 +21,15 @@ and the hub. It complements the gRPC transport protos in `tractatus/proto/transp
 
 ## At a glance
 
-- `StreamMessage` is the SDK-facing type used by streaming Engrams.
+- `InboundMessage` is the SDK-facing inbound type for streaming Engrams. It wraps `StreamMessage` and adds `Done()` to signal successful processing.
+- Outbound messages still use plain `StreamMessage`.
 - The hub/connector data plane uses `DataPacket` + `StreamEnvelope` on gRPC streams.
 - Ordering, replay, and flow control are negotiated through transport settings.
-- Control directives carry lifecycle signals (pause/resume, handoff states).
+- The control plane uses `ControlRequest` / `ControlResponse` with `ControlAction`; pause/resume backpressure uses `FlowControl.signal`.
 
 ## Key types (where to look)
 
-- SDK message contract: `bubu-sdk-go/engram/client.go` (`StreamMessage`)
+- SDK message contract: `bubu-sdk-go/engram/client.go` (`InboundMessage`, `StreamMessage`)
 - Transport gRPC types: `tractatus/proto/transport/v1/transport.proto`
 - Hub data plane types: `tractatus/proto/transport/v1/hub.proto`
 
@@ -64,8 +65,24 @@ If a message has `Payload`, `Inputs`, or `Transports`, the SDK wraps it into a t
 
 - `application/vnd.bubu.packet+json`
 
-If you need to send raw binary data, use `StreamMessage.Binary` and leave `Payload`,
-`Inputs`, and `Transports` empty.
+Use raw binary bypass only for opaque bytes. In that case, populate
+`StreamMessage.Binary` and leave `Payload`, `Inputs`, and `Transports` empty.
+
+For structured JSON packets, keep the JSON shape in `Payload` and mirror the
+same bytes into `Binary` with MIME type `application/json`. This preserves the
+structured step output contract for downstream templating while still letting
+transport connectors carry one binary frame on the wire.
+
+Messages that include `Inputs` or `Transports` are never treated as raw binary,
+even when `Binary` is also populated.
+
+The remaining pre-release ABI cleanup for this area is tracked by
+[bubu-sdk-go#72](https://github.com/bubustack/bubu-sdk-go/issues/72),
+[bubu-sdk-go#73](https://github.com/bubustack/bubu-sdk-go/issues/73),
+[bubu-sdk-go#74](https://github.com/bubustack/bubu-sdk-go/issues/74), and
+[RFC #77](https://github.com/orgs/bubustack/discussions/77). Treat the latest
+rules above as the intended contract; do not add compatibility fallbacks for
+older packet shapes.
 
 ## 4) Chunked binary frames
 
@@ -94,11 +111,24 @@ Rules:
 - Messages are sent on a single gRPC stream.
 - Ordering is preserved **as sent** by the SDK.
 - The SDK does not reorder or batch frames unless explicitly configured by the component.
-- When `delivery.semantics=at_least_once` and replay is enabled, the hub assigns
-  sequence numbers, tracks acknowledgements, and may replay unacked messages after
-  reconnects. Downstream Engrams must tolerate duplicates.
-- Flow control and acknowledgements travel over the hub `Process` stream via `FlowControl`
-  (in `ProcessRequest` / `ProcessResponse`) between connectors and the hub.
+- Default transport delivery is `ordering=none`, `semantics=best_effort`, and
+  `replay.mode=none`. In that mode packets may have no transport sequence and
+  the transport layer does not dedupe them.
+- When ordering is enabled or `delivery.semantics=at_least_once`, the hub assigns
+  downstream-local `stream_id` / `sequence` values and tracks acknowledgements.
+- The SDK dedupes completed ordered packets by `stream_id + partition + sequence`.
+  For unsequenced traffic, the SDK only dedupes packets that carry an explicit
+  `MessageID` (including hub lifecycle hooks, which use stable message IDs).
+- For sequenced packets, `Done()` is the completion boundary. If the connector
+  disconnects before the Engram calls `Done()`, the packet may be replayed after
+  reconnect. If the packet was already completed, the SDK suppresses the replay
+  and resends the completion receipt upstream.
+- SDK-to-connector completion receipts travel on the control stream as custom
+  action `downstream.delivered`. The connector converts those receipts into hub
+  or P2P flow acknowledgements.
+- Flow control and acknowledgements between connectors and the hub travel over
+  the hub `Process` stream via `FlowControl` (in `ProcessRequest` /
+  `ProcessResponse`).
 
 ## 6) Backpressure and timeouts
 
@@ -116,17 +146,51 @@ Rules:
   subscription ends.
 - The SDK closes the **output** channel when the Engram returns from `Stream`.
 - Engrams must respect context cancellation and return promptly on `ctx.Done()`.
+- Engrams receive `InboundMessage` values on the input channel and should call
+  `Done()` after successful handling or intentional drop. For best-effort
+  traffic this is a no-op; for sequenced traffic it drives replay / dedupe state.
+- When emitting structured JSON in a streaming Engram, prefer:
+  - `Payload`: canonical JSON for downstream step templating
+  - `Binary`: the same bytes with `MimeType: application/json`
+  - raw `Binary` without `Payload`: only for opaque media or non-JSON blobs
 
 ## 8) Control channel
 
-- The control channel carries lifecycle directives and capability negotiation.
-- Engrams may optionally implement `ControlDirectiveHandler` to react to directives.
+- The connector control stream is `TransportConnectorService.Control(stream ControlRequest) returns (stream ControlResponse)`.
+- Standard lifecycle, capability, heartbeat, and handoff events travel as `ControlAction` values.
+- Pause/resume backpressure travels in `FlowControl.signal` on `ControlRequest` / `ControlResponse`, not as action names.
+- Engrams may optionally implement `ControlDirectiveHandler`; the SDK maps inbound connector control responses onto that higher-level directive API.
 - Heartbeats are emitted by the connector and the SDK monitors liveness based on control
   traffic and configured timeouts.
+- Internal ordered-delivery receipts use custom action `downstream.delivered`.
+  Engram authors do not send these directly; the SDK emits them after `Done()`
+  for sequenced packets.
 - The control stream includes a protocol version header via gRPC metadata key
   `bubu-transport-protocol` (current `1.0.0`). Connectors may reject incompatible versions.
+- Hub registration and processing streams also require gRPC metadata key
+  `connector-generation` with a positive integer from the active binding.
+  Missing or invalid values are rejected by the hub.
 - Transport bindings embed `BindingInfo.protocol_version` (current `1.0.0`); connectors validate it at startup.
-Handoff directives emitted by connectors:
+
+Published Bobravoz hardening for identity binding and superseded-connector
+fencing lives in
+[bobravoz-grpc#44](https://github.com/bubustack/bobravoz-grpc/issues/44) and
+[bobravoz-grpc#45](https://github.com/bubustack/bobravoz-grpc/issues/45).
+
+### Startup handshake
+
+The latest contract requires an explicit startup gate on the control stream:
+
+- `connector.ready` is mandatory before the SDK starts the Engram stream loop.
+- `connector.ready` must declare `startup.capabilities=required|none`.
+- If `startup.capabilities=required`, the SDK waits for the first
+  `connector.capabilities` snapshot before treating the session as established.
+- Missing or malformed `startup.capabilities` metadata is a startup error.
+- Startup ACKs are terminal; peers do not recursively ACK an ACK.
+- The hub passively observes the same startup-capability declaration for logs
+  and metrics, but it does not gate readiness.
+
+Common connector actions surfaced by the SDK:
 
 - `handoff.draining`: connector is draining or losing hub connectivity; engrams should quiesce sends.
 - `handoff.cutover`: connector has reconnected and traffic may resume.
@@ -158,8 +222,9 @@ Steps consume hooks via `if` conditions that match on `packet.type`:
 if: '{{ eq (default "" packet.type) "storyrun.ready" }}'
 ```
 
-Hooks are delivered as standard packets with Envelope kind `hook`. Each hook
-fires at most once per StoryRun per step combination.
+Hooks are delivered as standard `DataPacket` messages with hook metadata
+(`kind=hook`, `type=<event>`, `hook.event`, `hook.source`) and a structured
+hook payload. Each hook fires at most once per StoryRun per step combination.
 
 See [Lifecycle Hooks](lifecycle-hooks.md) for the full hook packet structure,
 consumption patterns, and debugging tips.

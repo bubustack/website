@@ -66,8 +66,8 @@ values):
 
 | Key | Description |
 |-----|-------------|
-| `controller.storage.s3.bucket` | Bucket name (no default — must be configured) |
-| `controller.storage.s3.region` | S3 region (no default — must be configured) |
+| `controller.storage.s3.bucket` | Bucket name (built-in default empty; the quickstart install sets `bubu-default`) |
+| `controller.storage.s3.region` | S3 region (built-in default empty; the quickstart install sets `us-east-1`) |
 | `controller.storage.s3.endpoint` | S3 endpoint URL |
 | `controller.storage.s3.use-path-style` | Use path-style addressing (required for most non-AWS backends) |
 | `controller.storage.s3.auth-secret-name` | K8s Secret with `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` |
