@@ -492,66 +492,71 @@ Conformance suites enforce structured error contracts and validate output format
 ## Template definitions
 
 Components are defined as `EngramTemplate` or `ImpulseTemplate` resources with
-schemas for config, inputs, outputs, and secrets.
+schemas for config, inputs, outputs, and secrets. Today the template manifest
+itself is the public distribution unit: ship `Engram.yaml` or `Impulse.yaml` in
+the component repo root and tell users to apply the published release asset
+before they create runtime instances.
 
 ### Engram.yaml example
 
 ```yaml
-apiVersion: bubustack.io/v1alpha1
+apiVersion: catalog.bubustack.io/v1alpha1
 kind: EngramTemplate
 metadata:
   name: my-engram
+  annotations:
+    registry.bubustack.io/maturity: experimental
 spec:
+  version: 0.1.0
   description: "Processes data with custom logic"
   image: ghcr.io/myorg/my-engram:0.1.0
-  supports:
-    - job          # batch mode
-    - deployment   # streaming mode
-  config:
+  supportedModes:
+    - job
+    - deployment
+  configSchema:
     type: object
     properties:
       model:
         type: string
         description: "Model to use for processing"
         default: "default"
-        required: true
       maxRetries:
         type: integer
         description: "Maximum retry attempts"
         default: 3
-  inputs:
+  inputSchema:
     type: object
     properties:
       prompt:
         type: string
         description: "Input prompt to process"
-        required: true
-  outputs:
+  outputSchema:
     type: object
     properties:
       response:
         type: string
         description: "Processing result"
-  secrets:
-    type: object
-    properties:
-      apiKey:
-        type: string
-        description: "API key for external service"
-        required: true
+  secretSchema:
+    apiKey:
+      description: "API key for external service"
+      expectedKeys: ["api_key"]
+      required: true
 ```
 
 ### ImpulseTemplate example
 
 ```yaml
-apiVersion: bubustack.io/v1alpha1
+apiVersion: catalog.bubustack.io/v1alpha1
 kind: ImpulseTemplate
 metadata:
   name: my-impulse
 spec:
+  version: 0.1.0
   description: "Triggers StoryRuns on webhook events"
   image: ghcr.io/myorg/my-impulse:0.1.0
-  config:
+  supportedModes:
+    - deployment
+  configSchema:
     type: object
     properties:
       port:
@@ -562,13 +567,44 @@ spec:
         type: string
         description: "Webhook endpoint path"
         default: "/webhook"
-  secrets:
-    type: object
-    properties:
-      webhookSecret:
-        type: string
-        description: "Shared secret for webhook verification"
+  secretSchema:
+    webhookSecret:
+      description: "Shared secret for webhook verification"
+      expectedKeys: ["webhook_secret"]
+      required: true
 ```
+
+---
+
+## Publishing and registration today
+
+Until the registry release lands, the supported public workflow is GitHub
+Release based:
+
+1. Commit `Engram.yaml` or `Impulse.yaml` at the repo root next to `README.md`,
+   `Dockerfile`, and the component source.
+2. Push a versioned image such as `ghcr.io/<org>/<component>:<tag>`.
+3. Publish the matching template manifest as a release asset with the same
+   workflow run.
+4. Tell users to install the template directly from GitHub Releases:
+
+```bash
+kubectl apply -f https://github.com/<org>/<repo>/releases/latest/download/Engram.yaml
+kubectl apply -f https://github.com/<org>/<repo>/releases/latest/download/Impulse.yaml
+```
+
+For a pinned version, use:
+
+```bash
+kubectl apply -f https://github.com/<org>/<repo>/releases/download/<tag>/Engram.yaml
+kubectl apply -f https://github.com/<org>/<repo>/releases/download/<tag>/Impulse.yaml
+```
+
+The template is cluster-scoped (`catalog.bubustack.io/v1alpha1`). The runtime
+instance is namespaced (`bubustack.io/v1alpha1`).
+
+For the user-facing install path, see
+[Installing Components](../getting-started/installing-components.md).
 
 ---
 

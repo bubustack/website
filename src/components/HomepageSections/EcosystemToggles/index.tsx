@@ -34,15 +34,15 @@ const toggles: Toggle[] = [
     eyebrow: 'Engrams & Impulses',
     title: 'Package capabilities behind a stable interface.',
     summary:
-      'Engrams process data. Impulses trigger workflows from external events. Both are defined as templates with schema validation and versioned promotion.',
+      'Engrams process data. Impulses trigger workflows from external events. Both are defined as templates with schema validation, and today users install them from published GitHub Release assets.',
     bullets: [
       'Go SDK for batch, streaming, and trigger (Impulse) workloads.',
-      'Supports Jobs, Deployments, and StatefulSets with autoscaling hints.',
-      'Browse existing components on GitHub — or build your own.',
+      'Current public catalog: 13 Engrams and 4 Impulses.',
+      'Install current templates directly today; registry-backed discovery comes later.',
     ],
     cta: {
-      label: 'Building Engrams & Impulses',
-      to: '/docs/sdk/building-engrams',
+      label: 'Install current catalog',
+      to: '/docs/getting-started/installing-components',
     },
   },
   {

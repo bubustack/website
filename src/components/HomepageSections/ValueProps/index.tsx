@@ -34,15 +34,15 @@ const valueCards: ValueCard[] = [
     eyebrow: 'Reusable Modules',
     title: 'Build once, use everywhere.',
     description:
-      'EngramTemplates define inputs, outputs, and runtime requirements with JSON Schema. Version them, promote across environments, and distribute them through Git today. `bubu-registry` and the `bubu` CLI now cover registry-backed discovery and install flows; richer package guarantees are still roadmap work.',
+      'EngramTemplates define inputs, outputs, and runtime requirements with JSON Schema. Version them, promote across environments, and distribute them through GitHub Releases today. Until the registry release lands, users install templates directly from component releases; `bubu-registry` and the `bubu` CLI are the next step, not the default public flow yet.',
     cta: {
-      label: 'Create an Engram',
-      to: '/docs/sdk/building-engrams',
+      label: 'Install components',
+      to: '/docs/getting-started/installing-components',
     },
     highlights: [
       'Supports Job, Deployment, and StatefulSet runtimes',
       'Go SDK with testkit and conformance suites',
-      'Versioned promotion keeps staging and prod in sync',
+      '13 Engrams and 4 Impulses already available today',
     ],
   },
   {

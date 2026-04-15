@@ -55,7 +55,7 @@ The SDK ([bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go)) is **libc**: i
 | [`bubu-sdk-go`](https://github.com/bubustack/bubu-sdk-go) | Go SDK for building Engrams and Impulses |
 | [`bobravoz-grpc`](https://github.com/bubustack/bobravoz-grpc) | gRPC streaming transport hub |
 | [`bubuilder`](https://github.com/bubustack/bubuilder) | Web console and API server |
-| [`bubu-registry`](https://github.com/bubustack/bubu-registry) | Git-backed component registry and `bubu` CLI |
+| [`bubu-registry`](https://github.com/bubustack/bubu-registry) | Pre-release registry work and `bubu` CLI for future component discovery/install flows |
 | [`engrams/*`](https://github.com/orgs/bubustack/repositories?q=engram) | Individual Engram implementations |
 | [`impulses/*`](https://github.com/orgs/bubustack/repositories?q=impulse) | Individual Impulse implementations |
 

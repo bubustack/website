@@ -50,7 +50,9 @@ coupling that break when requirements change.
 2. Implement an Engram or Impulse using [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go).
 3. Define schemas in `EngramTemplate` or `ImpulseTemplate`.
 4. Validate with `bubu-sdk-go/testkit` and `bubu-sdk-go/conformance`.
-5. Build a Docker image and deploy by referencing the template in a Story.
+5. Build a Docker image. Until the registry release lands, publish the template
+   manifest as a GitHub Release asset and have users `kubectl apply` it
+   directly before they reference it from an `Engram` or `Impulse`.
 
 ---
 
@@ -64,7 +66,7 @@ coupling that break when requirements change.
 | [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) | Go SDK, testkit, and conformance helpers. |
 | [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) | Streaming transport operator: gRPC hub, topology analysis, connector lifecycle. |
 | [bubuilder](https://github.com/bubustack/bubuilder) | Web console and REST API server. |
-| [bubu-registry](https://github.com/bubustack/bubu-registry) | Git-backed registry and `bubu` CLI for scaffolding, discovery, install, and PR-based publishing. |
+| [bubu-registry](https://github.com/bubustack/bubu-registry) | Pre-release registry work and `bubu` CLI for future scaffolding, discovery, install, and publishing flows. |
 | [engrams/*](https://github.com/orgs/bubustack/repositories?q=engram) | Engram implementations (batch and streaming data processors). |
 | [impulses/*](https://github.com/orgs/bubustack/repositories?q=impulse) | Impulse implementations (event-driven workflow triggers). |
 | [examples](https://github.com/bubustack/examples) | Sample Stories and workflows. |
@@ -112,6 +114,7 @@ and [Go SDK](../sdk/go-sdk.md).
 ### Engrams (data processors)
 
 Engrams process data — they receive inputs, execute logic, and produce outputs.
+The current public catalog in this workspace is 13 Engrams and 4 Impulses.
 
 | Engram | Pattern | Description |
 | --- | --- | --- |
@@ -174,18 +177,18 @@ The latest structured streaming contract is:
 
 ## Packaging and registry
 
-BubuStack already has a working Git-backed component registry in
-[`bubu-registry`](https://github.com/bubustack/bubu-registry). The current v0
-flow is intentionally simple: static YAML indexes plus versioned
-`EngramTemplate` and `ImpulseTemplate` files, with CLI commands for scaffold,
-search, show, pull, install, and PR-based publish operations.
+BubuStack has registry work in [`bubu-registry`](https://github.com/bubustack/bubu-registry),
+but until the public registry release lands, the supported user path is GitHub
+Release based: each component repo publishes a versioned `Engram.yaml` or
+`Impulse.yaml` asset, and users install those templates directly with
+`kubectl apply`.
 
-Today, packaging is Git- and YAML-native rather than OCI-native. SemVer-aware
-resolution, signing, provenance, digest pinning, and stronger package
-guarantees remain roadmap work, but the registry itself is already real. See
-[Installing Components](../getting-started/installing-components.md) for the
-direct `kubectl apply` path and [Roadmap](../community/roadmap.md) for the
-next registry hardening steps.
+The `bubu` CLI and registry repo are the direction of travel for discovery and
+publishing, but public catalog coverage, SemVer-aware resolution, signing,
+provenance, digest pinning, and stronger package guarantees are still release
+work. See [Installing Components](../getting-started/installing-components.md)
+for the current release-asset flow and [Roadmap](../community/roadmap.md) for
+the next registry hardening steps.
 
 ---
 

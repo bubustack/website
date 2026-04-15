@@ -6,12 +6,12 @@ description: How to install Engram and Impulse templates into your BubuStack clu
 # Installing Engrams and Impulses
 
 BubuStack ships a growing catalog of ready-made components. This guide shows
-how to install them directly into your cluster from GitHub-hosted template YAMLs.
+how to install them directly into your cluster from published template YAMLs.
 
-[`bubu-registry`](https://github.com/bubustack/bubu-registry) and the `bubu`
-CLI already exist for registry-backed discovery, install, and publishing
-workflows. This page documents the direct `kubectl apply` path because it is
-the universal baseline that works for every published component today.
+Until the public registry release lands, this GitHub Release asset flow is the
+supported path for users: install the cluster-scoped
+`EngramTemplate` / `ImpulseTemplate` manifest from a component release, then
+create namespaced `Engram` / `Impulse` resources that reference it.
 
 **Before you start**, make sure you have
 [BubuStack installed](quickstart.md) and the CRDs registered
@@ -37,6 +37,19 @@ Every repository contains:
 
 Pre-built container images are published to
 `ghcr.io/bubustack/<component-name>:<version>`.
+The release workflow also uploads `Engram.yaml` or `Impulse.yaml` as a GitHub
+Release asset so the install URL stays stable.
+
+---
+
+## Current supported flow
+
+1. Apply the cluster-scoped template manifest from the component release (`Engram.yaml` or `Impulse.yaml`).
+2. Verify the template exists in the cluster.
+3. Create a namespaced `Engram` or `Impulse` that points at `spec.templateRef.name`.
+
+The template manifest itself uses `catalog.bubustack.io/v1alpha1`. The runtime
+instances that reference it use `bubustack.io/v1alpha1`.
 
 ---
 
@@ -45,11 +58,11 @@ Pre-built container images are published to
 EngramTemplates are **cluster-scoped** resources. They register the component
 so that Stories can reference it.
 
-### From a GitHub release (recommended)
+### From a GitHub Release asset (current supported path)
 
 ```bash
 # Example: install the openai-chat-engram template
-kubectl apply -f https://raw.githubusercontent.com/bubustack/openai-chat-engram/main/Engram.yaml
+kubectl apply -f https://github.com/bubustack/openai-chat-engram/releases/latest/download/Engram.yaml
 ```
 
 ### From a local clone
@@ -84,10 +97,10 @@ spec:
   templateRef:
     name: openai-chat          # must match EngramTemplate metadata.name
   with:                         # config values (see component README)
-    defaultModel: gpt-4o
+    defaultModel: gpt-4o-mini
     defaultTemperature: 0.7
-  secretRefs:
-    - name: openai-credentials  # Kubernetes Secret with API keys
+  secrets:
+    openai: openai-credentials  # Kubernetes Secret name keyed by template secretSchema
 ```
 
 ```bash
@@ -103,7 +116,7 @@ ImpulseTemplates follow the same pattern.
 
 ```bash
 # Example: install the cron-impulse template
-kubectl apply -f https://raw.githubusercontent.com/bubustack/cron-impulse/main/Impulse.yaml
+kubectl apply -f https://github.com/bubustack/cron-impulse/releases/latest/download/Impulse.yaml
 ```
 
 ```bash
@@ -146,34 +159,34 @@ kubectl get impulses -n my-app
 
 | Component | Pattern | Install |
 |-----------|---------|---------|
-| [conversation-memory-engram](https://github.com/bubustack/conversation-memory-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/conversation-memory-engram/main/Engram.yaml` |
-| [http-request-engram](https://github.com/bubustack/http-request-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/http-request-engram/main/Engram.yaml` |
-| [json-filter-engram](https://github.com/bubustack/json-filter-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/json-filter-engram/main/Engram.yaml` |
-| [map-reduce-adapter-engram](https://github.com/bubustack/map-reduce-adapter-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/map-reduce-adapter-engram/main/Engram.yaml` |
-| [materialize-engram](https://github.com/bubustack/materialize-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/materialize-engram/main/Engram.yaml` |
-| [mcp-adapter-engram](https://github.com/bubustack/mcp-adapter-engram) | Both | `kubectl apply -f https://raw.githubusercontent.com/bubustack/mcp-adapter-engram/main/Engram.yaml` |
-| [openai-chat-engram](https://github.com/bubustack/openai-chat-engram) | Both | `kubectl apply -f https://raw.githubusercontent.com/bubustack/openai-chat-engram/main/Engram.yaml` |
-| [openai-stt-engram](https://github.com/bubustack/openai-stt-engram) | Streaming | `kubectl apply -f https://raw.githubusercontent.com/bubustack/openai-stt-engram/main/Engram.yaml` |
-| [openai-tts-engram](https://github.com/bubustack/openai-tts-engram) | Streaming | `kubectl apply -f https://raw.githubusercontent.com/bubustack/openai-tts-engram/main/Engram.yaml` |
-| [silero-vad-engram](https://github.com/bubustack/silero-vad-engram) | Streaming | `kubectl apply -f https://raw.githubusercontent.com/bubustack/silero-vad-engram/main/Engram.yaml` |
-| [livekit-bridge-engram](https://github.com/bubustack/livekit-bridge-engram) | Streaming | `kubectl apply -f https://raw.githubusercontent.com/bubustack/livekit-bridge-engram/main/Engram.yaml` |
-| [livekit-turn-detector-engram](https://github.com/bubustack/livekit-turn-detector-engram) | Streaming | `kubectl apply -f https://raw.githubusercontent.com/bubustack/livekit-turn-detector-engram/main/Engram.yaml` |
-| [text-emitter-engram](https://github.com/bubustack/text-emitter-engram) | Batch | `kubectl apply -f https://raw.githubusercontent.com/bubustack/text-emitter-engram/main/Engram.yaml` |
+| [conversation-memory-engram](https://github.com/bubustack/conversation-memory-engram) | Batch | `kubectl apply -f https://github.com/bubustack/conversation-memory-engram/releases/latest/download/Engram.yaml` |
+| [http-request-engram](https://github.com/bubustack/http-request-engram) | Batch | `kubectl apply -f https://github.com/bubustack/http-request-engram/releases/latest/download/Engram.yaml` |
+| [json-filter-engram](https://github.com/bubustack/json-filter-engram) | Batch | `kubectl apply -f https://github.com/bubustack/json-filter-engram/releases/latest/download/Engram.yaml` |
+| [map-reduce-adapter-engram](https://github.com/bubustack/map-reduce-adapter-engram) | Batch | `kubectl apply -f https://github.com/bubustack/map-reduce-adapter-engram/releases/latest/download/Engram.yaml` |
+| [materialize-engram](https://github.com/bubustack/materialize-engram) | Batch | `kubectl apply -f https://github.com/bubustack/materialize-engram/releases/latest/download/Engram.yaml` |
+| [mcp-adapter-engram](https://github.com/bubustack/mcp-adapter-engram) | Both | `kubectl apply -f https://github.com/bubustack/mcp-adapter-engram/releases/latest/download/Engram.yaml` |
+| [openai-chat-engram](https://github.com/bubustack/openai-chat-engram) | Both | `kubectl apply -f https://github.com/bubustack/openai-chat-engram/releases/latest/download/Engram.yaml` |
+| [openai-stt-engram](https://github.com/bubustack/openai-stt-engram) | Streaming | `kubectl apply -f https://github.com/bubustack/openai-stt-engram/releases/latest/download/Engram.yaml` |
+| [openai-tts-engram](https://github.com/bubustack/openai-tts-engram) | Streaming | `kubectl apply -f https://github.com/bubustack/openai-tts-engram/releases/latest/download/Engram.yaml` |
+| [silero-vad-engram](https://github.com/bubustack/silero-vad-engram) | Streaming | `kubectl apply -f https://github.com/bubustack/silero-vad-engram/releases/latest/download/Engram.yaml` |
+| [livekit-bridge-engram](https://github.com/bubustack/livekit-bridge-engram) | Streaming | `kubectl apply -f https://github.com/bubustack/livekit-bridge-engram/releases/latest/download/Engram.yaml` |
+| [livekit-turn-detector-engram](https://github.com/bubustack/livekit-turn-detector-engram) | Streaming | `kubectl apply -f https://github.com/bubustack/livekit-turn-detector-engram/releases/latest/download/Engram.yaml` |
+| [text-emitter-engram](https://github.com/bubustack/text-emitter-engram) | Batch | `kubectl apply -f https://github.com/bubustack/text-emitter-engram/releases/latest/download/Engram.yaml` |
 
 ### Impulses
 
 | Component | Trigger | Install |
 |-----------|---------|---------|
-| [cron-impulse](https://github.com/bubustack/cron-impulse) | Cron schedule | `kubectl apply -f https://raw.githubusercontent.com/bubustack/cron-impulse/main/Impulse.yaml` |
-| [github-webhook-impulse](https://github.com/bubustack/github-webhook-impulse) | GitHub events | `kubectl apply -f https://raw.githubusercontent.com/bubustack/github-webhook-impulse/main/Impulse.yaml` |
-| [kubernetes-impulse](https://github.com/bubustack/kubernetes-impulse) | K8s events | `kubectl apply -f https://raw.githubusercontent.com/bubustack/kubernetes-impulse/main/Impulse.yaml` |
-| [livekit-webhook-impulse](https://github.com/bubustack/livekit-webhook-impulse) | LiveKit events | `kubectl apply -f https://raw.githubusercontent.com/bubustack/livekit-webhook-impulse/main/Impulse.yaml` |
+| [cron-impulse](https://github.com/bubustack/cron-impulse) | Cron schedule | `kubectl apply -f https://github.com/bubustack/cron-impulse/releases/latest/download/Impulse.yaml` |
+| [github-webhook-impulse](https://github.com/bubustack/github-webhook-impulse) | GitHub events | `kubectl apply -f https://github.com/bubustack/github-webhook-impulse/releases/latest/download/Impulse.yaml` |
+| [kubernetes-impulse](https://github.com/bubustack/kubernetes-impulse) | K8s events | `kubectl apply -f https://github.com/bubustack/kubernetes-impulse/releases/latest/download/Impulse.yaml` |
+| [livekit-webhook-impulse](https://github.com/bubustack/livekit-webhook-impulse) | LiveKit events | `kubectl apply -f https://github.com/bubustack/livekit-webhook-impulse/releases/latest/download/Impulse.yaml` |
 
 ---
 
-## Bulk install (all components)
+## Bulk install (all current templates)
 
-To install every available template at once:
+To install every currently tracked template at once (13 Engrams + 4 Impulses):
 
 ```bash
 # Engrams
@@ -182,13 +195,13 @@ for repo in conversation-memory-engram http-request-engram json-filter-engram \
   openai-chat-engram openai-stt-engram openai-tts-engram \
   silero-vad-engram livekit-bridge-engram livekit-turn-detector-engram \
   text-emitter-engram; do
-  kubectl apply -f "https://raw.githubusercontent.com/bubustack/$repo/main/Engram.yaml"
+  kubectl apply -f "https://github.com/bubustack/$repo/releases/latest/download/Engram.yaml"
 done
 
 # Impulses
 for repo in cron-impulse github-webhook-impulse kubernetes-impulse \
   livekit-webhook-impulse; do
-  kubectl apply -f "https://raw.githubusercontent.com/bubustack/$repo/main/Impulse.yaml"
+  kubectl apply -f "https://github.com/bubustack/$repo/releases/latest/download/Impulse.yaml"
 done
 ```
 
@@ -210,8 +223,8 @@ Reference the secret in your Engram instance:
 
 ```yaml
 spec:
-  secretRefs:
-    - name: openai-credentials
+  secrets:
+    openai: openai-credentials
 ```
 
 ---
@@ -239,7 +252,7 @@ To upgrade a component to a newer version, re-apply the template from the
 target release tag:
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/bubustack/openai-chat-engram/v0.2.0/Engram.yaml
+kubectl apply -f https://github.com/bubustack/openai-chat-engram/releases/download/v0.2.0/Engram.yaml
 ```
 
 Existing Engram instances referencing the template will pick up the new image
@@ -249,10 +262,9 @@ on their next reconciliation cycle.
 
 ## What's next
 
-- [`bubu-registry`](https://github.com/bubustack/bubu-registry) and the `bubu`
-  CLI already cover Git-backed search, install, and publishing workflows. The
-  public catalog breadth, SemVer-aware resolution, and supply-chain metadata
-  remain active roadmap work.
+- The registry-backed install flow is still ahead of the public release. Until
+  then, use the published template assets above directly from each component
+  release or vendor them into your own GitOps repository.
 - Until then, browse all components on GitHub:
   [Engrams](https://github.com/orgs/bubustack/repositories?q=engram) |
   [Impulses](https://github.com/orgs/bubustack/repositories?q=impulse)

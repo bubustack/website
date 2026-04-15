@@ -71,14 +71,14 @@ const FeatureList: FeatureItem[] = [
     description: (
       <>
         Engrams process data. Impulses trigger workflows from external events.
-        Both are defined as templates with schema validation and shared through Git today.
-        `bubu-registry` adds a Git-backed catalog and `bubu` CLI, while richer package
-        guarantees remain on the roadmap.
+        Both are defined as templates with schema validation and installed from
+        GitHub Releases today. The registry release and `bubu` CLI are next,
+        while richer package guarantees remain on the roadmap.
       </>
     ),
     proofPoints: [
       {text: 'Go SDK for building batch, streaming, and trigger (Impulse) components.'},
-      {text: 'Growing catalog of Engrams and Impulses — OpenAI, LiveKit, HTTP, and more.'},
+      {text: '13 Engrams and 4 Impulses shipped today — OpenAI, LiveKit, HTTP, memory, and more.'},
       {text: 'Testkit for local testing without a cluster.'},
       {text: 'New SDKs (Python, TypeScript) and storage backends.', planned: true},
     ],

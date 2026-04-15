@@ -21,7 +21,8 @@ installed: [kubectl](https://kubernetes.io/docs/tasks/tools/),
 2. Install cert-manager           (webhook TLS)
 3. Install S3 storage             (payload offloading)
 4. Install BubuStack controllers  (bobrapet + bobravoz-grpc)
-5. Deploy an example              (start experimenting)
+5. Install component templates    (EngramTemplate / ImpulseTemplate)
+6. Deploy an example              (start experimenting)
 ```
 
 ## Step 1: Create a cluster
@@ -160,7 +161,38 @@ kubectl api-resources | grep bubustack
 # Should list: stories, storyruns, stepruns, engrams, impulses, transports, etc.
 ```
 
-## Step 5: Deploy an example
+## Step 5: Install the example templates
+
+Examples create namespaced `Engram` and `Impulse` resources that point at
+cluster-scoped templates via `spec.templateRef`. Until the public registry
+release lands, install those templates from the published GitHub Release assets
+before you apply `engrams.yaml` or `impulse.yaml`.
+
+### Hello World dependencies
+
+```bash
+kubectl apply -f https://github.com/bubustack/http-request-engram/releases/latest/download/Engram.yaml
+```
+
+### LiveKit Voice dependencies
+
+```bash
+for repo in livekit-bridge-engram conversation-memory-engram openai-chat-engram \
+  openai-stt-engram openai-tts-engram silero-vad-engram; do
+  kubectl apply -f "https://github.com/bubustack/$repo/releases/latest/download/Engram.yaml"
+done
+
+kubectl apply -f https://github.com/bubustack/livekit-webhook-impulse/releases/latest/download/Impulse.yaml
+```
+
+### Verify templates are registered
+
+```bash
+kubectl get engramtemplates
+kubectl get impulsetemplates
+```
+
+## Step 6: Deploy an example
 
 Examples in the [examples repository](https://github.com/bubustack/examples)
 share a common shape, but not every example uses every file:
@@ -188,6 +220,7 @@ README.md        Example-specific setup, verification, and demo guidance
 ```bash
 cd examples/batch/hello-world
 
+# Requires the http-request EngramTemplate from Step 5
 kubectl apply -f bootstrap.yaml
 kubectl apply -f engrams.yaml
 kubectl apply -f story.yaml
@@ -199,6 +232,7 @@ kubectl apply -f storyrun.yaml
 ```bash
 cd examples/realtime/livekit-voice
 
+# Requires the EngramTemplates and ImpulseTemplate from Step 5
 cp secrets.yaml.example secrets.yaml
 # edit secrets.yaml
 
