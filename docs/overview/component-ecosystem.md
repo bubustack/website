@@ -64,7 +64,7 @@ coupling that break when requirements change.
 | [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) | Go SDK, testkit, and conformance helpers. |
 | [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) | Streaming transport operator: gRPC hub, topology analysis, connector lifecycle. |
 | [bubuilder](https://github.com/bubustack/bubuilder) | Web console and REST API server. |
-| bubu-registry *(planned)* | Git-backed registry and `bubu` CLI. See [Roadmap](../community/roadmap.md). |
+| [bubu-registry](https://github.com/bubustack/bubu-registry) | Git-backed registry and `bubu` CLI for scaffolding, discovery, install, and PR-based publishing. |
 | [engrams/*](https://github.com/orgs/bubustack/repositories?q=engram) | Engram implementations (batch and streaming data processors). |
 | [impulses/*](https://github.com/orgs/bubustack/repositories?q=impulse) | Impulse implementations (event-driven workflow triggers). |
 | [examples](https://github.com/bubustack/examples) | Sample Stories and workflows. |
@@ -115,6 +115,7 @@ Engrams process data — they receive inputs, execute logic, and produce outputs
 
 | Engram | Pattern | Description |
 | --- | --- | --- |
+| [conversation-memory-engram](https://github.com/bubustack/conversation-memory-engram) | Batch | In-memory per-session conversation history with TTL-based eviction |
 | [http-request-engram](https://github.com/bubustack/http-request-engram) | Batch | HTTP requests with pagination, retries, and response parsing |
 | [json-filter-engram](https://github.com/bubustack/json-filter-engram) | Batch | Filter JSON payloads (inline or offloaded) with JSONPath |
 | [map-reduce-adapter-engram](https://github.com/bubustack/map-reduce-adapter-engram) | Batch | Dynamic fan-out with child StoryRuns and result aggregation |
@@ -126,6 +127,7 @@ Engrams process data — they receive inputs, execute logic, and produce outputs
 | [silero-vad-engram](https://github.com/bubustack/silero-vad-engram) | Streaming | Voice activity detection using Silero ONNX models |
 | [livekit-bridge-engram](https://github.com/bubustack/livekit-bridge-engram) | Streaming | LiveKit room participant bridge for audio/data channels |
 | [livekit-turn-detector-engram](https://github.com/bubustack/livekit-turn-detector-engram) | Streaming | Conversational turn detection for voice pipelines |
+| [text-emitter-engram](https://github.com/bubustack/text-emitter-engram) | Batch | Emits a one-time text message when the stream starts |
 
 ### Impulses (event triggers)
 
@@ -170,13 +172,20 @@ The latest structured streaming contract is:
 
 ---
 
-## Packaging and registry *(planned)*
+## Packaging and registry
 
-A Git-backed component registry (`bubu-registry`) and CLI (`bubu`) for
-scaffolding, publishing, and discovering components are on the
-[Roadmap](../community/roadmap.md). Today, components are shared as container
-images and `EngramTemplate`/`ImpulseTemplate` YAML files applied directly to
-the cluster.
+BubuStack already has a working Git-backed component registry in
+[`bubu-registry`](https://github.com/bubustack/bubu-registry). The current v0
+flow is intentionally simple: static YAML indexes plus versioned
+`EngramTemplate` and `ImpulseTemplate` files, with CLI commands for scaffold,
+search, show, pull, install, and PR-based publish operations.
+
+Today, packaging is Git- and YAML-native rather than OCI-native. SemVer-aware
+resolution, signing, provenance, digest pinning, and stronger package
+guarantees remain roadmap work, but the registry itself is already real. See
+[Installing Components](../getting-started/installing-components.md) for the
+direct `kubectl apply` path and [Roadmap](../community/roadmap.md) for the
+next registry hardening steps.
 
 ---
 

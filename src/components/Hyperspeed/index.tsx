@@ -532,7 +532,7 @@ class CarLights {
       )
     });
 
-    material.onBeforeCompile = shader => {
+    material.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
       shader.vertexShader = shader.vertexShader.replace(
         '#include <getDistortion_vertex>',
         typeof this.options.distortion === 'object' ? this.options.distortion.getDistortion : ''
@@ -662,7 +662,7 @@ class LightsSticks {
       )
     });
 
-    material.onBeforeCompile = shader => {
+    material.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
       shader.vertexShader = shader.vertexShader.replace(
         '#include <getDistortion_vertex>',
         typeof this.options.distortion === 'object' ? this.options.distortion.getDistortion : ''
@@ -798,7 +798,7 @@ class Road {
       )
     });
 
-    material.onBeforeCompile = shader => {
+    material.onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
       shader.vertexShader = shader.vertexShader.replace(
         '#include <getDistortion_vertex>',
         typeof this.options.distortion === 'object' ? this.options.distortion.getDistortion : ''

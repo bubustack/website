@@ -3,6 +3,7 @@
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "jsx": "react-jsx"
   },
   "exclude": [".docusaurus", "build"]

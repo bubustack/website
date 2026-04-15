@@ -72,7 +72,8 @@ const FeatureList: FeatureItem[] = [
       <>
         Engrams process data. Impulses trigger workflows from external events.
         Both are defined as templates with schema validation and shared through Git today.
-        A dedicated registry is planned.
+        `bubu-registry` adds a Git-backed catalog and `bubu` CLI, while richer package
+        guarantees remain on the roadmap.
       </>
     ),
     proofPoints: [

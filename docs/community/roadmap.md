@@ -20,6 +20,8 @@ Ship code, get recognized, grow your role. See [Get Involved](get-involved.md).
 - **GitOps-native** — Every resource is a CRD. Deploy with Flux, Argo CD, or plain kubectl.
 - **Observability** — OpenTelemetry tracing, structured errors, step-level metrics.
 - **Go SDK** — Build Engrams and Impulses with testkit, conformance suites, secrets management, and the latest-only `StoryTrigger` / `EffectClaim` contract. Mounted runtime bundles, durability tightening, and streaming ABI consolidation are published follow-on tracks, not hidden backlog.
+- **Component registry and CLI** — [`bubu-registry`](https://github.com/bubustack/bubu-registry) already provides a Git-backed registry plus the `bubu` CLI for scaffolding, search, show, pull, install, and PR-based publishing. Public catalog breadth, SemVer-aware resolution, and supply-chain metadata are still active roadmap work.
+- **Bubuilder console** — [`bubuilder`](https://github.com/bubustack/bubuilder) already provides a web console and API for StoryRuns, StepRuns, jobs, trigger/effect resources, logs, offloaded artifacts, trace links, and YAML inspection/editing. Story authoring and production deployment hardening are still active tracks.
 - **Storage offloading** — S3-compatible backends for large payloads.
 - **Security** — RBAC, pod security defaults, guarded cross-namespace policies, and webhook validation. One manager-role reduction is still on the roadmap.
 
@@ -70,7 +72,8 @@ members.
 
 - **Test the platform** — Deploy it, break it, and open issues in the owning repo. Runtime/platform bugs belong in [bobrapet](https://github.com/bubustack/bobrapet/issues); docs/site bugs belong in [website](https://github.com/bubustack/website/issues). Bug reports are contributions. Every issue helps us improve.
 - **Improve documentation** — Fix gaps, add examples, clarify confusing sections. Good docs lower the barrier for everyone.
-- **Component registry and CLI** — `bubu-registry` and the `bubu` CLI for scaffolding, publishing, and discovering components. Not built yet.
+- **Registry and CLI** — Expand `bubu-registry` package coverage, tighten version resolution and validation, and improve `bubu` publishing/discovery workflows.
+- **Bubuilder UX and authoring** — Extend the inspector-first console, improve workflow authoring, and harden shared-cluster deployment defaults.
 - **Operator security model hardening** — Redesign manager ownership/RBAC so secret propagation and managed runner identities keep working without broad cluster-wide `Secret` / `ServiceAccount` mutation grants.
 - **New testkit development** — Improve harnesses, add assertion helpers, expand conformance suites.
 - **New storage backends** — GCS, Azure Blob, and beyond. The S3 interface is the current boundary.
@@ -121,6 +124,18 @@ runtime.
 | **Admission availability posture** | The current fail-closed webhook stance needs either high availability or an explicitly different operational posture. | [bobravoz-grpc#50](https://github.com/bubustack/bobravoz-grpc/issues/50) |
 | **Test harness isolation** | Bobravoz e2e work must stop depending on ambient kube state and broad cleanup outside owned resources. | [bobravoz-grpc#51](https://github.com/bubustack/bobravoz-grpc/issues/51) |
 
+#### Registry and Bubuilder backlog
+
+`bubu-registry` and `bubuilder` already exist. The work here is about hardening
+and expanding them, not inventing them from scratch.
+
+| Item | Why it matters | Current track |
+| --- | --- | --- |
+| **Registry package guarantees** | The registry is intentionally minimal today: `latest` resolution is lexicographic, and there is no signing, provenance, digest pinning, or OCI packaging yet. | [bubu-registry](https://github.com/bubustack/bubu-registry) |
+| **Registry catalog growth and publishing docs** | The Git-backed workflow works, but official package coverage, examples, and publishing guidance still need to grow so component authors can use it without reverse-engineering the repo layout. | [bubu-registry](https://github.com/bubustack/bubu-registry), [examples](https://github.com/bubustack/examples), [website](https://github.com/bubustack/website) |
+| **Bubuilder authoring workflow** | The console is already useful for inspection and YAML operations, but the Story Builder is still a placeholder and authoring flows need to catch up with the runtime inspector. | [bubuilder](https://github.com/bubustack/bubuilder) |
+| **Bubuilder production posture** | Token-based auth, redaction, and storage integration exist today, but shared-cluster deployments still need clearer production guidance and safer default posture. | [bubuilder](https://github.com/bubustack/bubuilder), [website](https://github.com/bubustack/website) |
+
 #### Contribution guardrails for SDK work
 
 - Prefer additive tests first, then small code changes.
@@ -144,6 +159,8 @@ Track project activity from these source-of-truth pages:
 - [BubuStack organization repositories](https://github.com/orgs/bubustack/repositories)
 - [Examples releases](https://github.com/bubustack/examples/releases)
 - [Bobrapet releases](https://github.com/bubustack/bobrapet/releases)
+- [bubu-registry releases](https://github.com/bubustack/bubu-registry/releases)
+- [Bubuilder releases](https://github.com/bubustack/bubuilder/releases)
 - [Go SDK releases](https://github.com/bubustack/bubu-sdk-go/releases)
 
 ## Vision
@@ -171,7 +188,8 @@ Where we want to take BubuStack, roughly in priority order.
   (Knative Eventing, Argo Events, Tekton Triggers). Low effort, high strategic
   value. This is also the boundary future SDK helpers and external runtimes
   should target instead of repo-local event wrappers.
-- **Expand bubu-registry** — More Engrams, Impulses, and community templates.
+- **Registry hardening and catalog growth** — Keep the Git-backed registry simple while adding SemVer-aware resolution, stronger validation, provenance/signing metadata, and broader official/community package coverage.
+- **Bubuilder authoring and deployment UX** — Move beyond the current inspector-first console with a real Story builder, better catalog/edit flows, and clearer production auth/deployment guidance.
 
 ### Medium-term
 
@@ -210,12 +228,14 @@ Where we want to take BubuStack, roughly in priority order.
 
 1. Browse [operator/runtime issues](https://github.com/bubustack/bobrapet/issues),
    [Bobravoz transport issues](https://github.com/bubustack/bobravoz-grpc/issues),
-   [Go SDK issues](https://github.com/bubustack/bubu-sdk-go/issues), or
+   [Go SDK issues](https://github.com/bubustack/bubu-sdk-go/issues),
+   [registry/CLI issues](https://github.com/bubustack/bubu-registry/issues),
+   [Bubuilder issues](https://github.com/bubustack/bubuilder/issues), or
    [website/docs issues](https://github.com/bubustack/website/issues),
    especially anything tagged `good first issue` or `help wanted`.
-2. Comment on a roadmap item in
-   [GitHub Discussions](https://github.com/bubustack/bobrapet/discussions) to
-   coordinate.
+2. Use [GitHub Discussions](https://github.com/orgs/bubustack/discussions) to
+   coordinate cross-repo work, especially registry policy, Bubuilder UX/API
+   direction, and runtime contract changes.
 3. For large features, open a design discussion before writing code.
 4. See [Get Involved](get-involved.md) for contribution guidelines and the
    contributor ladder.

@@ -13,9 +13,10 @@ const roadmapNow = [
 
 const waysToHelp = [
   'Test the platform on real workloads and open reproducible issues.',
-  'Improve docs and examples where onboarding is confusing.',
+  'Improve docs and examples where onboarding is confusing, especially around registry and Bubuilder workflows.',
   'Help redesign the manager security model without breaking secret propagation.',
-  'Build and share Engrams and Impulses.',
+  'Expand the registry catalog and publishing UX for Engrams and Impulses.',
+  'Improve Bubuilder inspection, authoring, and shared-cluster UX.',
   'Contribute testkit, transport adapters, and storage backends.',
 ];
 
@@ -24,7 +25,8 @@ const roadmapNext = [
   'Artifact-backed runtime payload delivery — replace env-heavy runtime config with mounted runtime bundles.',
   'Loop primitive — bounded iteration with exit conditions.',
   'Workflow checkpointing — durable execution and restart recovery.',
-  'bubu-registry and bubu CLI for publishing/discovery workflows.',
+  'Registry hardening and catalog growth — SemVer-aware resolution, stronger validation, provenance, and more published templates.',
+  'Bubuilder authoring and deployment UX — replace the placeholder Story Builder and tighten shared-cluster auth guidance.',
   'Python SDK with the same ABI contract as the Go SDK.',
   'MCP gateway and native A2A protocol support.',
   'Multi-cluster federation — global workflows across regions.',

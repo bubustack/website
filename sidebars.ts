@@ -7,7 +7,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Getting Started',
       collapsed: false,
-      items: ['getting-started/prerequisites', 'getting-started/quickstart'],
+      items: ['getting-started/prerequisites', 'getting-started/quickstart', 'getting-started/installing-components'],
     },
     {
       type: 'category',

@@ -34,7 +34,7 @@ const valueCards: ValueCard[] = [
     eyebrow: 'Reusable Modules',
     title: 'Build once, use everywhere.',
     description:
-      'EngramTemplates define inputs, outputs, and runtime requirements with JSON Schema. Version them, promote across environments, and share through GitHub today. A dedicated registry is planned.',
+      'EngramTemplates define inputs, outputs, and runtime requirements with JSON Schema. Version them, promote across environments, and distribute them through Git today. `bubu-registry` and the `bubu` CLI now cover registry-backed discovery and install flows; richer package guarantees are still roadmap work.',
     cta: {
       label: 'Create an Engram',
       to: '/docs/sdk/building-engrams',

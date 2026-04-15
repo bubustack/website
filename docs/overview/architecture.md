@@ -52,7 +52,7 @@ BubuStack comprises multiple independent Go modules, each with its own `go.mod`.
 | [bubu-sdk-go](https://github.com/bubustack/bubu-sdk-go) | Go SDK for building Engrams and Impulses. Testkit, conformance suites, K8s client helpers. | Component |
 | [bobravoz-grpc](https://github.com/bubustack/bobravoz-grpc) | Streaming transport operator: gRPC hub, transport topology analysis, connector lifecycle. | Cluster |
 | [bubuilder](https://github.com/bubustack/bubuilder) | Web console and API server for managing Stories, Runs, and observability. | Cluster |
-| bubu-registry *(planned)* | Git-backed component registry and `bubu` CLI for publishing templates. See [Roadmap](../community/roadmap.md). | Standalone |
+| [bubu-registry](https://github.com/bubustack/bubu-registry) | Git-backed component registry and `bubu` CLI for scaffolding, discovery, install, and PR-based publishing. | Standalone |
 | [engrams/*](https://github.com/orgs/bubustack/repositories?q=engram) | Individual Engram implementations (batch and streaming data processors). | Component |
 | [impulses/*](https://github.com/orgs/bubustack/repositories?q=impulse) | Individual Impulse implementations (event-driven workflow triggers). | Component |
 | [helm-charts](https://github.com/bubustack/helm-charts) | Helm charts for deploying BubuStack. | Deployment |
@@ -279,6 +279,14 @@ See [Streaming Contract](../streaming/streaming-contract.md) and
 Web console and REST API for operators and workflow authors. Provides
 visibility into StoryRuns, StepRuns, Jobs, logs, offloaded storage, and
 observability data.
+
+### [bubu-registry](https://github.com/bubustack/bubu-registry) (registry + CLI)
+
+Standalone Git-backed component registry and `bubu` CLI. Today it provides
+static YAML indexes, template scaffolding, search/show/pull/install commands,
+and PR-based publishing workflows without depending on operator or SDK modules.
+The roadmap work here is about stronger package guarantees and catalog growth,
+not inventing the registry from scratch.
 
 ---
 

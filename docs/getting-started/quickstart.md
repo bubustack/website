@@ -233,6 +233,7 @@ kubectl get storyruns -A --watch
 
 - Read the example's `README.md` for detailed configuration options.
 - Explore other examples in the [examples repository](https://github.com/bubustack/examples).
+- See [Installing Components](installing-components.md) to install individual Engrams and Impulses.
 - See [Core](../overview/core.md) for the full workflow model.
 - See [Building Engrams](../sdk/building-engrams.md) to build your own components.
 - See [Lifecycle Hooks](../streaming/lifecycle-hooks.md) for streaming lifecycle events.
@@ -240,6 +241,7 @@ kubectl get storyruns -A --watch
 ## Related docs
 
 - [Prerequisites](prerequisites.md) — CLI tools and system dependencies.
+- [Installing Components](installing-components.md) — Install Engrams and Impulses from the catalog.
 - [Architecture](../overview/architecture.md) — System architecture and module map.
 - [Operator Configuration](../operator/configuration.md) — Operator configuration keys and defaults.
 - [Component Ecosystem](../overview/component-ecosystem.md) — Building custom Engrams and Impulses.
