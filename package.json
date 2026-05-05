@@ -32,7 +32,7 @@
     "@docusaurus/faster": "3.10.0",
     "@docusaurus/module-type-aliases": "3.10.0",
     "@docusaurus/tsconfig": "3.10.0",
-    "@docusaurus/types": "3.10.0",
+    "@docusaurus/types": "3.10.1",
     "@types/three": "^0.183.1",
     "typescript": "~6.0.2",
     "wrangler": "^4.83.0"
